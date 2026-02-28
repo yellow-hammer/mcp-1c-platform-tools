@@ -14,7 +14,6 @@ cliff.toml
 
 # Публикация в MCP Registry и npm (не нужны в VSIX)
 server.json
-run-mcp.js
 
 # Скрипты и прочее
 scripts/**
@@ -28,6 +27,10 @@ out/test/**
 
 # Зависимости (MCP-сервер собран в бандл out/src/index.js; extension.js использует только vscode)
 node_modules/**
+
+# Секреты (никогда не публиковать)
+.mcpregistry_github_token
+.mcpregistry_registry_token
 
 # Локальные и временные
 *.log
