@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: "\U0001F4AC Обсуждения"
+    url: https://github.com/yellow-hammer/mcp-1c-platform-tools/discussions
+    about: Задайте вопрос или поделитесь идеями в обсуждениях
+  - name: "\U0001F4DA Документация"
+    url: https://github.com/yellow-hammer/mcp-1c-platform-tools#readme
+    about: Прочитайте документацию проекта
