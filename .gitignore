@@ -1,0 +1,49 @@
+# Сгенерированные файлы
+dist/
+build/
+out/
+node_modules/
+coverage/
+*.tsbuildinfo
+
+# Временные файлы
+*.log
+*.tmp
+*.cache
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.idea/
+.vscode/settings.json
+*.code-workspace
+
+# Локальные конфигурации
+.env
+.env.local
+.env.*.local
+
+# Source maps
+*.map
+
+# Package manager
+package-lock.json.bak
+yarn.lock
+pnpm-lock.yaml
+
+# OS
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
+
+# VS Code расширение
+*.vsix
