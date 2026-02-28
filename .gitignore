@@ -24,6 +24,10 @@ Thumbs.db
 .vscode/settings.json
 *.code-workspace
 
+# MCP Registry (токены авторизации — не коммитить)
+.mcpregistry_github_token
+.mcpregistry_registry_token
+
 # Локальные конфигурации
 .env
 .env.local

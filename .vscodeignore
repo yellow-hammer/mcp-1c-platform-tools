@@ -6,10 +6,15 @@ test/**
 
 # Конфигурация разработки
 tsconfig.json
+esbuild.config.mjs
 .vscode/**
 .gitignore
 .cursor/**
 cliff.toml
+
+# Публикация в MCP Registry и npm (не нужны в VSIX)
+server.json
+run-mcp.js
 
 # Скрипты и прочее
 scripts/**
@@ -21,7 +26,7 @@ scripts/**
 # Скомпилированные тесты (не нужны в VSIX)
 out/test/**
 
-# Зависимости (включены в бандлы out/extension.js и out/run.js)
+# Зависимости (MCP-сервер собран в бандл out/src/index.js; extension.js использует только vscode)
 node_modules/**
 
 # Локальные и временные

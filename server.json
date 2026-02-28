@@ -1,0 +1,36 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.yellow-hammer/mcp-1c-platform-tools",
+  "description": "MCP для команд 1c-platform-tools. Нужно расширение 1c-platform-tools с включённым IPC.",
+  "repository": {
+    "url": "https://github.com/yellow-hammer/mcp-1c-platform-tools",
+    "source": "github"
+  },
+  "version": "0.1.2",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@yellow-hammer/mcp-1c-platform-tools",
+      "version": "0.1.2",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "ONEC_IPC_PORT",
+          "description": "Порт IPC-сервера расширения 1c-platform-tools (настройка 1c-platform-tools.ipc.port)",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "ONEC_IPC_TOKEN",
+          "description": "Токен IPC (если задан в 1c-platform-tools.ipc.token)",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": true
+        }
+      ]
+    }
+  ]
+}

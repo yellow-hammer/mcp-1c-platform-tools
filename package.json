@@ -1,5 +1,5 @@
 {
-  "name": "mcp-1c-platform-tools",
+  "name": "@yellow-hammer/mcp-1c-platform-tools",
   "displayName": "1C: Platform Tools MCP",
   "description": "MCP-сервер для запуска команд 1c-platform-tools через агентов Cursor/VS Code",
   "keywords": [
@@ -13,9 +13,14 @@
     "cursor",
     "1c platform tools"
   ],
-  "version": "0.1.0",
+  "version": "0.1.2",
   "publisher": "yellow-hammer",
   "main": "./out/src/extension.js",
+  "bin": {
+    "mcp-1c-platform-tools": "./run-mcp.js"
+  },
+  "mcpName": "io.github.yellow-hammer/mcp-1c-platform-tools",
+  "files": ["run-mcp.js", "out", "resources", "package.json", "README.md", "LICENSE"],
   "engines": {
     "vscode": "^1.101.0",
     "node": ">=20.0.0"
@@ -60,7 +65,7 @@
     "theme": "dark"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node esbuild.config.mjs",
     "dev": "tsx src/index.ts",
     "changelog": "git-cliff --config cliff.toml --output CHANGELOG.md",
     "vscode:prepublish": "npm run build",
