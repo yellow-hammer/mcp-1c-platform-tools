@@ -1,0 +1,28 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "MCP: запуск с отладкой",
+			"type": "node",
+			"request": "launch",
+			"runtimeExecutable": "npx",
+			"runtimeArgs": ["-y", "tsx", "--inspect-brk", "src/index.ts"],
+			"cwd": "${workspaceFolder:mcp-1c-platform-tools}",
+			"console": "integratedTerminal",
+			"env": {
+				"ONEC_IPC_HOST": "127.0.0.1",
+				"ONEC_IPC_PORT": "40241"
+			},
+			"skipFiles": ["<node_internals>/**"]
+		},
+		{
+			"name": "MCP: подключиться к процессу (port 9229)",
+			"type": "node",
+			"request": "attach",
+			"port": 9229,
+			"skipFiles": ["<node_internals>/**"],
+			"localRoot": "${workspaceFolder:mcp-1c-platform-tools}",
+			"remoteRoot": "${workspaceFolder:mcp-1c-platform-tools}"
+		}
+	]
+}

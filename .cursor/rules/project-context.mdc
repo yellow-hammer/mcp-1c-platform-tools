@@ -1,0 +1,36 @@
+---
+description: Контекст расширения MCP 1C Platform Tools и регистрация инструментов
+alwaysApply: true
+---
+
+# Контекст проекта
+
+Расширение VS Code, которое предоставляет **MCP-сервер** (Model Context Protocol), чтобы агенты Cursor/VS Code могли вызывать команды 1c-platform-tools по IPC. Зависит от **yellow-hammer.1c-platform-tools**; расширение должно быть установлено, IPC включён (`1c-platform-tools.ipc.enabled`).
+
+## Архитектура
+
+- **Точка входа**: `src/extension.ts` регистрирует определение MCP-сервера и передаёт настройки IPC (порт, токен) через переменные окружения; процесс MCP запускает хост (Cursor/VS Code), выполняется `out/index.js` (Node).
+- **MCP-сервер (standalone)**: `src/index.ts` — создаёт McpServer (версия из package.json), получает список команд расширения по IPC (`listCommands()`), регистрирует один инструмент на команду. Транспорт: stdio.
+- **IPC-клиент**: `src/ipcClient.ts` — TCP-клиент к IPC-серверу расширения (хост/порт из env или по умолчанию). Методы: `listCommands()`, `executeCommand(commandId, args, projectPath)`.
+- **Имена инструментов**: `src/toolName.ts` — `commandIdToToolName(commandId)` преобразует command ID расширения (например `1c-platform-tools.configuration.loadFromSrc`) в имена MCP-инструментов с сокращениями так, чтобы **суммарная длина «имя сервера + имя инструмента» не превышала 60 символов** (ограничение платформы). Допустимые сокращения (1Cpt, 1cpt) и правило 60 символов — в `.cursor/rules/naming-abbreviations.mdc`.
+- **Логирование**: `src/logger.ts` — OutputChannel расширения; `src/loggerServer.ts` — вывод в stderr для standalone-процесса MCP (уровень из env `MCP_1C_LOG_LEVEL`).
+- **Иконка**: `resources/1c-icon.png` — иконка расширения, указывается в package.json.
+
+## Динамическая регистрация инструментов
+
+Инструменты **не** захардкожены. При старте MCP-сервер вызывает `ipcClient.listCommands()`, получает список command ID от расширения (IPC-метод `listCommands`). Для каждого ID регистрирует `server.tool(toolName, baseParamsShape, handler)`. Имя инструмента вычисляется из commandId через `commandIdToToolName()`. Добавление новой команды в 1c-platform-tools (и её отдача в listCommands) автоматически добавляет новый MCP-инструмент; в mcp-1c-platform-tools менять ничего не нужно, кроме возможного обновления сокращений в toolName.ts при превышении лимита длины.
+
+## Параметры
+
+У всех инструментов общая схема ввода (baseParamsShape): `projectPath` (обязательный), опционально `settingsFile`, `ibConnection`, `pathsOverride`. Расширение получает их и выполняет команду в контексте указанного проекта.
+
+## Когда расширение недоступно
+
+Если `listCommands` не удаётся (расширение не запущено, IPC выключен, таймаут), сервер регистрирует один инструмент (например `onec_platform_tools_status`) с сообщением, что нужно открыть проект 1С и включить IPC в настройках 1c-platform-tools.
+
+## Ключевые соглашения
+
+- **Коммиты**: [Conventional Commits](https://www.conventionalcommits.org/ru/v1.0.0/), сообщения на русском.
+- **Комментарии и сообщения пользователю**: на русском.
+- Типы: из `@types/node`, `@types/vscode`, избегать `any`.
+- Логирование: в расширении — `src/logger.ts`; в процессе MCP — `src/loggerServer.ts` (stderr). Не использовать `console.log`/`console.error` в продакшн-коде.

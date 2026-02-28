@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "mcp-1c-platform-tools": {
+      "command": "npx",
+      "args": ["-y", "tsx", "../mcp-1c-platform-tools/src/index.ts"],
+      "env": {
+        "ONEC_IPC_HOST": "127.0.0.1",
+        "ONEC_IPC_PORT": "40241"
+      }
+    }
+  }
+}
