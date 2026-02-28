@@ -6,12 +6,12 @@
     "url": "https://github.com/yellow-hammer/mcp-1c-platform-tools",
     "source": "github"
   },
-  "version": "0.1.2",
+  "version": "0.1.5",
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "@yellow-hammer/mcp-1c-platform-tools",
-      "version": "0.1.2",
+      "identifier": "mcp-1c-platform-tools",
+      "version": "0.1.5",
       "transport": {
         "type": "stdio"
       },
