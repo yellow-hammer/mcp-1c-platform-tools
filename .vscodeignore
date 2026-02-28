@@ -1,0 +1,29 @@
+# Исходники и тесты
+src/**
+test/**
+**/*.ts
+**/*.tsx
+
+# Конфигурация разработки
+tsconfig.json
+.vscode/**
+.gitignore
+.cursor/**
+cliff.toml
+
+# Скрипты и прочее
+scripts/**
+**/*.map
+
+# CI
+.github/**
+
+# Скомпилированные тесты (не нужны в VSIX)
+out/test/**
+
+# Зависимости (включены в бандлы out/extension.js и out/run.js)
+node_modules/**
+
+# Локальные и временные
+*.log
+.DS_Store
