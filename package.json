@@ -1,6 +1,6 @@
 {
   "name": "mcp-1c-platform-tools",
-  "displayName": "MCP 1C Platform Tools",
+  "displayName": "1C: Platform Tools MCP",
   "description": "MCP-сервер для запуска команд 1c-platform-tools через агентов Cursor/VS Code",
   "keywords": [
     "1c",

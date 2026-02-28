@@ -1,4 +1,4 @@
-# MCP-сервер для 1C Platform tools
+# MCP-сервер для 1C: Platform tools
 
 MCP-сервер предоставляет инструменты Model Context Protocol для запуска команд расширения [1c-platform-tools](https://marketplace.visualstudio.com/items?itemName=yellow-hammer.1c-platform-tools) через агентов Cursor/VS Code.
 
