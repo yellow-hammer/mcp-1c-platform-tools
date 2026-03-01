@@ -13,7 +13,7 @@
     "cursor",
     "1c platform tools"
   ],
-  "version": "0.1.5",
+  "version": "0.1.6",
   "publisher": "yellow-hammer",
   "main": "./out/src/extension.js",
   "engines": {
