@@ -3,9 +3,7 @@
 MCP-сервер предоставляет инструменты Model Context Protocol для запуска команд расширения [1c-platform-tools](https://marketplace.visualstudio.com/items?itemName=yellow-hammer.1c-platform-tools) через агентов Cursor/VS Code.
 
 ## Быстрый старт
-[<img src="https://cursor.com/deeplink/mcp-install-dark.svg" alt="Add MCP 1C Platform Tools to Cursor">](https://cursor.com/en/install-mcp?name=mcp-1c-platform-tools&config=eyJjb21tYW5kIjoibm9kZSIsImFyZ3MiOlsiJHtlbnY6VVNFUlBST0ZJTEV9XFwuY3Vyc29yXFxleHRlbnNpb25zXFx5ZWxsb3ctaGFtbWVyLm1jcC0xYy1wbGF0Zm9ybS10b29scy0wLjEuNVxcb3V0XFxzcmNcXGluZGV4LmpzIl0sImVudiI6eyJPTkVDX0lQQ19QT1JUIjoi0L%2FQvtGA0YIg0LjQtyAxYy1wbGF0Zm9ybS10b29scy5pcGMucG9ydCIsIk9ORUNfSVBDX1RPS0VOIjoi0YLQvtC60LXQvSDQuNC3IDFjLXBsYXRmb3JtLXRvb2xzLmlwYy50b2tlbiAo0LXRgdC70Lgg0LfQsNC00LDQvSkifX0%3D)
-
-[<img src="https://cursor.com/deeplink/mcp-install-dark.svg" alt="Add MCP 1C Platform Tools to Cursor">](https://cursor.com/en/install-mcp?name=mcp-1c-platform-tools&config=%7B%22command%22%3A%22node%22%2C%22args%22%3A%5B%22%24%7Benv%3AUSERPROFILE%7D%5C%5C.cursor%5C%5Cextensions%5C%5Cyellow-hammer.mcp-1c-platform-tools-0.1.5%5C%5Cout%5C%5Csrc%5C%5Cindex.js%22%5D%2C%22env%22%3A%7B%22ONEC_IPC_PORT%22%3A%22%3Cfrom%201c-platform-tools.ipc.port%3E%22%2C%22ONEC_IPC_TOKEN%22%3A%22%3Cfrom%201c-platform-tools.ipc.token%2C%20optional%3E%22%7D%7D)
+[<img src="https://cursor.com/deeplink/mcp-install-dark.svg" alt="Add MCP 1C Platform Tools to Cursor">](https://cursor.com/en/install-mcp?name=mcp-1c-platform-tools&config=eyJjb21tYW5kIjoibm9kZSIsImFyZ3MiOlsiJHtlbnY6VVNFUlBST0ZJTEV9XFwuY3Vyc29yXFxleHRlbnNpb25zXFx5ZWxsb3ctaGFtbWVyLm1jcC0xYy1wbGF0Zm9ybS10b29scy0wLjEuNVxcb3V0XFxzcmNcXGluZGV4LmpzIl0sImVudiI6eyJPTkVDX0lQQ19QT1JUIjoiPGZyb20gMWMtcGxhdGZvcm0tdG9vbHMuaXBjLnBvcnQ%2BIiwiT05FQ19JUENfVE9LRU4iOiI8ZnJvbSAxYy1wbGF0Zm9ybS10b29scy5pcGMudG9rZW4sIG9wdGlvbmFsPiJ9fQ%3D%3D)
 
 1. Установите расширение [1c-platform-tools](https://marketplace.visualstudio.com/items?itemName=yellow-hammer.1c-platform-tools) и **MCP 1C Platform Tools** (из VS Code Marketplace или Open VSX).
 2. Включите IPC: настройка `1c-platform-tools.ipc.enabled` = `true`.
