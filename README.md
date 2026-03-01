@@ -3,7 +3,6 @@
 MCP-сервер предоставляет инструменты Model Context Protocol для запуска команд расширения [1c-platform-tools](https://marketplace.visualstudio.com/items?itemName=yellow-hammer.1c-platform-tools) через агентов Cursor/VS Code.
 
 ## Быстрый старт
-[<img src="https://cursor.com/deeplink/mcp-install-dark.svg" alt="Add MCP 1C Platform Tools to Cursor">](https://cursor.com/en/install-mcp?name=mcp-1c-platform-tools&config=eyJjb21tYW5kIjoibm9kZSIsImFyZ3MiOlsiJHtlbnY6VVNFUlBST0ZJTEV9XFwuY3Vyc29yXFxleHRlbnNpb25zXFx5ZWxsb3ctaGFtbWVyLm1jcC0xYy1wbGF0Zm9ybS10b29scy0wLjEuNVxcb3V0XFxzcmNcXGluZGV4LmpzIl0sImVudiI6eyJPTkVDX0lQQ19QT1JUIjoi0L%2FQvtGA0YIg0LjQtyAxYy1wbGF0Zm9ybS10b29scy5pcGMucG9ydCIsIk9ORUNfSVBDX1RPS0VOIjoi0YLQvtC60LXQvSDQuNC3IDFjLXBsYXRmb3JtLXRvb2xzLmlwYy50b2tlbiAo0LXRgdC70Lgg0LfQsNC00LDQvSkifX0%3D)
 
 1. Установите расширение [1c-platform-tools](https://marketplace.visualstudio.com/items?itemName=yellow-hammer.1c-platform-tools) и **MCP 1C Platform Tools** (из VS Code Marketplace или Open VSX).
 2. Включите IPC: настройка `1c-platform-tools.ipc.enabled` = `true`.
@@ -14,6 +13,8 @@ MCP-сервер предоставляет инструменты Model Context
 В **Cursor** на данный момент не поддерживается API регистрации MCP через расширения, поэтому сервер не появляется в «Installed MCP Servers». Варианты:
 
 - **Через каталог MCP (рекомендуется):** после публикации сервера в [MCP Registry](https://registry.modelcontextprotocol.io) его можно добавить в Cursor из каталога (как другие MCP) — тогда не нужен ручной путь в `mcp.json`. Инструкция по публикации в каталог: [MCP_REGISTRY_PUBLISH.md](MCP_REGISTRY_PUBLISH.md).
+- **Нажать на кнопку:**
+  [<img src="https://cursor.com/deeplink/mcp-install-dark.svg" alt="Add MCP 1C Platform Tools to Cursor">](https://cursor.com/en/install-mcp?name=mcp-1c-platform-tools&config=eyJjb21tYW5kIjoibm9kZSIsImFyZ3MiOlsiJHtlbnY6VVNFUlBST0ZJTEV9XFwuY3Vyc29yXFxleHRlbnNpb25zXFx5ZWxsb3ctaGFtbWVyLm1jcC0xYy1wbGF0Zm9ybS10b29scy0wLjEuNVxcb3V0XFxzcmNcXGluZGV4LmpzIl0sImVudiI6eyJPTkVDX0lQQ19QT1JUIjoicG9ydCBmcm9tIDFjLXBsYXRmb3JtLXRvb2xzLmlwYy5wb3J0IiwiT05FQ19JUENfVE9LRU4iOiJ0b2tlbiBmcm9tIDFjLXBsYXRmb3JtLXRvb2xzLmlwYy50b2tlbiAoaWYgc2V0KSJ9fQ%3D%3D)
 - **Вручную:** добавьте сервер в `mcp.json`, как описано ниже.
 
 1. Создайте или откройте файл конфигурации MCP:
