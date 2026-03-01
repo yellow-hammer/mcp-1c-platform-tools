@@ -4,13 +4,13 @@ MCP-сервер предоставляет инструменты Model Context
 
 ## Быстрый старт
 
-1. Установите расширение [1c-platform-tools](https://marketplace.visualstudio.com/items?itemName=yellow-hammer.1c-platform-tools) и **MCP 1C Platform Tools** (из VS Code Marketplace или Open VSX).
+1. Установите расширение [1c-platform-tools](https://marketplace.visualstudio.com/items?itemName=yellow-hammer.1c-platform-tools) и расширение **MCP 1C Platform Tools**.
 2. Включите IPC: настройка `1c-platform-tools.ipc.enabled` = `true`.
 3. Откройте проект 1С (папка с `packagedef`).
 
 В **VS Code** MCP регистрируется расширением автоматически: после установки и включения IPC ничего настраивать не нужно.
 
-В **Cursor** на данный момент не поддерживается API регистрации MCP через расширения, поэтому сервер не появляется в «Installed MCP Servers». Варианты:
+Если MCP не подхватился автоматически (например в Cursor), добавьте сервер вручную — см. раздел ниже.
 
 - **Через каталог MCP (рекомендуется):** после публикации сервера в [MCP Registry](https://registry.modelcontextprotocol.io) его можно добавить в Cursor из каталога (как другие MCP) — тогда не нужен ручной путь в `mcp.json`. Инструкция по публикации в каталог: [MCP_REGISTRY_PUBLISH.md](MCP_REGISTRY_PUBLISH.md).
 - **Нажать на кнопку:**
@@ -18,12 +18,16 @@ MCP-сервер предоставляет инструменты Model Context
 [<img src="https://cursor.com/deeplink/mcp-install-dark.svg" alt="Add MCP 1C Platform Tools to Cursor">](https://cursor.com/en/install-mcp?name=mcp-1c-platform-tools&config=eyJjb21tYW5kIjoibm9kZSIsImFyZ3MiOlsiJHtlbnY6VVNFUlBST0ZJTEV9XFwuY3Vyc29yXFxleHRlbnNpb25zXFx5ZWxsb3ctaGFtbWVyLm1jcC0xYy1wbGF0Zm9ybS10b29scy0wLjEuNVxcb3V0XFxzcmNcXGluZGV4LmpzIl0sImVudiI6eyJPTkVDX0lQQ19QT1JUIjoicG9ydCBmcm9tIDFjLXBsYXRmb3JtLXRvb2xzLmlwYy5wb3J0IiwiT05FQ19JUENfVE9LRU4iOiJ0b2tlbiBmcm9tIDFjLXBsYXRmb3JtLXRvb2xzLmlwYy50b2tlbiAoaWYgc2V0KSJ9fQ%3D%3D)
 - **Вручную:** добавьте сервер в `mcp.json`, как описано ниже.
 
-1. Создайте или откройте файл конфигурации MCP:
-   - глобально: `~/.cursor/mcp.json` (в Windows: `%USERPROFILE%\.cursor\mcp.json`);
-   - в проекте: `.cursor/mcp.json` в корне проекта.
-2. Укажите сервер в формате ниже. В пути к расширению можно использовать переменные окружения: в Cursor в `mcp.json` поддерживается подстановка `${env:ИМЯ}` (например `${env:USERPROFILE}` в Windows или `${env:HOME}` в macOS/Linux). Папку расширения можно посмотреть в Cursor: расширения → MCP 1C Platform Tools → правый клик → «Copy Extension Path».
+Конфиг MCP можно положить **в проект** (тогда он действует только при открытии этого проекта) или **глобально** (для всех проектов).
 
-**Пример (Windows, путь через домашнюю папку):**
+### Файл в проекте (рекомендуется)
+
+1. В **корне проекта 1С** (папка с `packagedef`) создайте папку `.cursor`, если её нет.
+2. Создайте или откройте файл **`.cursor/mcp.json`** в этом корне.
+3. Вставьте конфиг ниже (в пути — версия расширения, в `env` — порт и токен из настроек 1c-platform-tools).
+4. Перезагрузите окно (Ctrl+Shift+P → «Developer: Reload Window»).
+
+**Пример для проекта (Windows):**
 
 ```json
 {
@@ -32,37 +36,26 @@ MCP-сервер предоставляет инструменты Model Context
       "command": "node",
       "args": ["${env:USERPROFILE}\\.cursor\\extensions\\yellow-hammer.mcp-1c-platform-tools-0.1.0\\out\\src\\index.js"],
       "env": {
-        "ONEC_IPC_PORT": "порт из 1c-platform-tools.ipc.port",
-        "ONEC_IPC_TOKEN": "токен из 1c-platform-tools.ipc.token (если задан)"
+        "ONEC_IPC_HOST": "127.0.0.1",
+        "ONEC_IPC_PORT": "40241",
+        "ONEC_IPC_TOKEN": ""
       }
     }
   }
 }
 ```
 
-**macOS/Linux:** замените путь на `"${env:HOME}/.cursor/extensions/yellow-hammer.mcp-1c-platform-tools-0.1.0/out/src/index.js"` (подставьте свою версию вместо `0.1.0`). После обновления расширения версия в имени папки может измениться — тогда обновите путь в конфиге.
+**macOS/Linux:** в `args` — `"${env:HOME}/.cursor/extensions/yellow-hammer.mcp-1c-platform-tools-0.1.0/out/src/index.js"` (подставьте версию).
 
-Убедитесь, что расширение **1c-platform-tools** установлено, IPC включён (`1c-platform-tools.ipc.enabled` = true) и в настройках расширения указаны те же порт и токен, что в `env`.
+### Глобальный файл
 
-## Общие параметры инструментов
+Вместо файла в проекте можно использовать один конфиг для всех проектов:
 
-Все MCP-инструменты принимают единый набор параметров:
+- **Windows:** `%USERPROFILE%\.cursor\mcp.json`
+- **macOS/Linux:** `~/.cursor/mcp.json`
 
-| Параметр        | Обязательный | Описание                                                                            |
-|-----------------|:------------:|-------------------------------------------------------------------------------------|
-| `projectPath`   |      да      | Абсолютный путь к корню проекта 1С (где лежат `packagedef` и `env.json`)            |
-| `settingsFile`  |     нет      | Путь к `env.json` относительно `projectPath` (по умолчанию `env.json`)              |
-| `ibConnection`  |     нет      | Строка подключения к ИБ; если не указана, берётся из `env.json` или `/F./build/ib`  |
-| `pathsOverride` |     нет      | Переопределение путей (`cf`, `out`, `cfe`, `epf`, `erf`) относительно `projectPath` |
+Структура `mcpServers` та же. После изменений перезагрузите окно Cursor.
 
-Результат каждого инструмента — текстовое сообщение (например, `Выполнено.` или описание ошибки).
+---
 
-## Типичный сценарий с агентом
-
-1. Агент изменяет исходники проекта 1С (например, в `src/cf` или `src/cfe`).
-2. Агент вызывает MCP-инструмент (`configuration_loadFromSrc`, `extensions_loadFromSrc` и т.д.).
-3. MCP отправляет запрос расширению по IPC; расширение выполняет команду (vrunner) и возвращает результат.
-
-## Для разработчиков
-
-Сборка из исходников и участие в разработке — см. [CONTRIBUTING.md](CONTRIBUTING.md).
+Убедитесь, что расширение **1c-platform-tools** установлено, IPC включён (`1c-platform-tools.ipc.enabled` = true) и в настройках указаны те же порт и токен, что в `env` конфига MCP.
