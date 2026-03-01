@@ -34,7 +34,7 @@ export function activate(context: vscode.ExtensionContext): void {
 		}),
 		{ dispose: () => logger.dispose() }
 	);
-	logger.info("MCP 1C Platform Tools: провайдер зарегистрирован");
+	logger.info("1C: Platform Tools MCP: провайдер зарегистрирован");
 }
 
 /**

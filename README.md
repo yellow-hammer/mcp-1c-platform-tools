@@ -1,4 +1,4 @@
-# MCP-сервер для 1C: Platform tools
+# 1C: Platform Tools MCP
 
 [![OpenYellow](https://openyellow.openintegrations.dev/data/badges/1160221881.png)](https://openyellow.org/grid?filter=top&repo=1160221881)
 
@@ -6,7 +6,7 @@ MCP-сервер предоставляет инструменты Model Context
 
 ## Быстрый старт
 
-1. Установите расширение [1c-platform-tools](https://marketplace.visualstudio.com/items?itemName=yellow-hammer.1c-platform-tools) и расширение **MCP 1C Platform Tools**.
+1. Установите расширение [1c-platform-tools](https://marketplace.visualstudio.com/items?itemName=yellow-hammer.1c-platform-tools) и расширение **1C: Platform Tools MCP**.
 2. Включите IPC: настройка `1c-platform-tools.ipc.enabled` = `true`.
 3. Откройте проект 1С (папка с `packagedef`).
 
@@ -14,7 +14,7 @@ MCP-сервер предоставляет инструменты Model Context
 
 В **Cursor** расширение не может прописать MCP в настройки, поэтому конфиг нужно добавить вручную. Варианты:
 
-- **Кнопка:** [![Add MCP 1C Platform Tools to Cursor](resources/mcp-install-dark.png)](https://cursor.com/en/install-mcp?name=mcp-1c-platform-tools&config=eyJjb21tYW5kIjoibm9kZSIsImFyZ3MiOlsiJHtlbnY6VVNFUlBST0ZJTEV9XFwuY3Vyc29yXFxleHRlbnNpb25zXFx5ZWxsb3ctaGFtbWVyLm1jcC0xYy1wbGF0Zm9ybS10b29scy0wLjEuNVxcb3V0XFxzcmNcXGluZGV4LmpzIl0sImVudiI6eyJPTkVDX0lQQ19IT1NUIjoiMTI3LjAuMC4xIiwiT05FQ19JUENfUE9SVCI6IjQwMjQxIiwiT05FQ19JUENfVE9LRU4iOiIifX0%3D) - подставит в `mcp.json` конфиг как в примере ниже (хост 127.0.0.1, порт 40241, токен пустой).
+- **Кнопка:** [![Add 1C: Platform Tools MCP to Cursor](resources/mcp-install-dark.png)](https://cursor.com/en/install-mcp?name=mcp-1c-platform-tools&config=eyJjb21tYW5kIjoibm9kZSIsImFyZ3MiOlsiJHtlbnY6VVNFUlBST0ZJTEV9XFwuY3Vyc29yXFxleHRlbnNpb25zXFx5ZWxsb3ctaGFtbWVyLm1jcC0xYy1wbGF0Zm9ybS10b29scy0wLjEuNVxcb3V0XFxzcmNcXGluZGV4LmpzIl0sImVudiI6eyJPTkVDX0lQQ19IT1NUIjoiMTI3LjAuMC4xIiwiT05FQ19JUENfUE9SVCI6IjQwMjQxIiwiT05FQ19JUENfVE9LRU4iOiIifX0%3D) - подставит в `mcp.json` конфиг как в примере ниже (хост 127.0.0.1, порт 40241, токен пустой).
 - **Вручную:** см. конфиг ниже.
 
 ### Конфиг для Cursor (ручная настройка)

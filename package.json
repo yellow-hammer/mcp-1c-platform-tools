@@ -33,7 +33,7 @@
     "mcpServerDefinitionProviders": [
       {
         "id": "mcp-1c-platform-tools",
-        "label": "MCP 1C Platform Tools"
+        "label": "1C: Platform Tools MCP"
       }
     ]
   },

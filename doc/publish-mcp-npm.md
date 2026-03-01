@@ -1,4 +1,4 @@
-# Публикация MCP 1C Platform Tools (npm + MCP Registry)
+# Публикация 1C: Platform Tools MCP (npm + MCP Registry)
 
 Краткая шпаргалка по тому, что настроено и как публиковать.
 
