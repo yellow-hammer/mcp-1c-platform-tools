@@ -5,6 +5,14 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/),
 и этот проект придерживается [Semantic Versioning](https://semver.org/lang/ru/).
 
+## [0.1.6] - 2026-03-01
+
+
+### 📚 Documentation
+
+- Обновлены инструкции по настройке MCP в README и CONTRIBUTING, удалены устаревшие файлы конфигурации, добавлен скрипт для генерации ссылки установки MCP для Cursor
+
+
 ## [0.1.5] - 2026-02-28
 
 
