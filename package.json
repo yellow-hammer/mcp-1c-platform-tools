@@ -16,10 +16,6 @@
   "version": "0.1.5",
   "publisher": "yellow-hammer",
   "main": "./out/src/extension.js",
-  "bin": {
-    "mcp-1c-platform-tools": "./run-mcp.js"
-  },
-  "mcpName": "io.github.yellow-hammer/mcp-1c-platform-tools",
   "engines": {
     "vscode": "^1.101.0",
     "node": ">=20.0.0"
@@ -59,10 +55,6 @@
     "Ivan Karlo (i.karlo@outlook.com)"
   ],
   "icon": "resources/1c-icon.png",
-  "galleryBanner": {
-    "color": "#0000FF",
-    "theme": "dark"
-  },
   "scripts": {
     "build": "tsc && node esbuild.config.mjs",
     "dev": "tsx src/index.ts",
