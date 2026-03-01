@@ -14,7 +14,8 @@ MCP-сервер предоставляет инструменты Model Context
 
 - **Через каталог MCP (рекомендуется):** после публикации сервера в [MCP Registry](https://registry.modelcontextprotocol.io) его можно добавить в Cursor из каталога (как другие MCP) — тогда не нужен ручной путь в `mcp.json`. Инструкция по публикации в каталог: [MCP_REGISTRY_PUBLISH.md](MCP_REGISTRY_PUBLISH.md).
 - **Нажать на кнопку:**
-  [<img src="https://cursor.com/deeplink/mcp-install-dark.svg" alt="Add MCP 1C Platform Tools to Cursor">](https://cursor.com/en/install-mcp?name=mcp-1c-platform-tools&config=eyJjb21tYW5kIjoibm9kZSIsImFyZ3MiOlsiJHtlbnY6VVNFUlBST0ZJTEV9XFwuY3Vyc29yXFxleHRlbnNpb25zXFx5ZWxsb3ctaGFtbWVyLm1jcC0xYy1wbGF0Zm9ybS10b29scy0wLjEuNVxcb3V0XFxzcmNcXGluZGV4LmpzIl0sImVudiI6eyJPTkVDX0lQQ19QT1JUIjoicG9ydCBmcm9tIDFjLXBsYXRmb3JtLXRvb2xzLmlwYy5wb3J0IiwiT05FQ19JUENfVE9LRU4iOiJ0b2tlbiBmcm9tIDFjLXBsYXRmb3JtLXRvb2xzLmlwYy50b2tlbiAoaWYgc2V0KSJ9fQ%3D%3D)
+
+[<img src="https://cursor.com/deeplink/mcp-install-dark.svg" alt="Add MCP 1C Platform Tools to Cursor">](https://cursor.com/en/install-mcp?name=mcp-1c-platform-tools&config=eyJjb21tYW5kIjoibm9kZSIsImFyZ3MiOlsiJHtlbnY6VVNFUlBST0ZJTEV9XFwuY3Vyc29yXFxleHRlbnNpb25zXFx5ZWxsb3ctaGFtbWVyLm1jcC0xYy1wbGF0Zm9ybS10b29scy0wLjEuNVxcb3V0XFxzcmNcXGluZGV4LmpzIl0sImVudiI6eyJPTkVDX0lQQ19QT1JUIjoicG9ydCBmcm9tIDFjLXBsYXRmb3JtLXRvb2xzLmlwYy5wb3J0IiwiT05FQ19JUENfVE9LRU4iOiJ0b2tlbiBmcm9tIDFjLXBsYXRmb3JtLXRvb2xzLmlwYy50b2tlbiAoaWYgc2V0KSJ9fQ%3D%3D)
 - **Вручную:** добавьте сервер в `mcp.json`, как описано ниже.
 
 1. Создайте или откройте файл конфигурации MCP:
