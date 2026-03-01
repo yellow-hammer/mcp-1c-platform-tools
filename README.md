@@ -3,6 +3,7 @@
 MCP-сервер предоставляет инструменты Model Context Protocol для запуска команд расширения [1c-platform-tools](https://marketplace.visualstudio.com/items?itemName=yellow-hammer.1c-platform-tools) через агентов Cursor/VS Code.
 
 ## Быстрый старт
+https://cursor.com/en/install-mcp?name=mcp-1c-platform-tools&config=%7B%22command%22%3A%22node%22%2C%22args%22%3A%5B%22%24%7Benv%3AUSERPROFILE%7D%5C%5C.cursor%5C%5Cextensions%5C%5Cyellow-hammer.mcp-1c-platform-tools-0.1.5%5C%5Cout%5C%5Csrc%5C%5Cindex.js%22%5D%2C%22env%22%3A%7B%22ONEC_IPC_PORT%22%3A%22%3Cfrom%201c-platform-tools.ipc.port%3E%22%2C%22ONEC_IPC_TOKEN%22%3A%22%3Cfrom%201c-platform-tools.ipc.token%2C%20optional%3E%22%7D%7D
 
 1. Установите расширение [1c-platform-tools](https://marketplace.visualstudio.com/items?itemName=yellow-hammer.1c-platform-tools) и **MCP 1C Platform Tools** (из VS Code Marketplace или Open VSX).
 2. Включите IPC: настройка `1c-platform-tools.ipc.enabled` = `true`.
