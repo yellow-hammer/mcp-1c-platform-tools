@@ -34,3 +34,4 @@ alwaysApply: true
 - **Комментарии и сообщения пользователю**: на русском.
 - Типы: из `@types/node`, `@types/vscode`, избегать `any`.
 - Логирование: в расширении — `src/logger.ts`; в процессе MCP — `src/loggerServer.ts` (stderr). Не использовать `console.log`/`console.error` в продакшн-коде.
+- **Эволюция без самодельной совместимости**: см. `.cursor/rules/evolution-no-legacy.mdc`.

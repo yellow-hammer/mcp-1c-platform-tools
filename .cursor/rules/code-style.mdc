@@ -30,3 +30,5 @@ alwaysApply: false
 ## Перед коммитом
 
 - Удалять отладочный вывод и лишние комментарии.
+
+**Эволюция:** `.cursor/rules/evolution-no-legacy.mdc`.

@@ -58,3 +58,5 @@ public async request<T = unknown>(method: string, params?: Record<string, unknow
 
 - Не повторять в JSDoc то, что уже однозначно видно из сигнатуры и имени (например «возвращает Promise» для async-функции), если нет уточнений.
 - Тесты: достаточно файлового JSDoc при необходимости; описание сценария оставлять в `describe`/`it`.
+
+**Эволюция:** `.cursor/rules/evolution-no-legacy.mdc`.
