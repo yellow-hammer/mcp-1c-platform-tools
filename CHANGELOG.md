@@ -5,6 +5,47 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/),
 и этот проект придерживается [Semantic Versioning](https://semver.org/lang/ru/).
 
+## [0.1.7] - 2026-05-20
+
+
+### 🚀 Features
+
+- **mcp:** Параметр wait и структурированный вывод для агентов (#15)
+
+
+### 🐛 Bug Fixes
+
+- Исправлено название проекта на "1C: Platform Tools MCP" во всех файлах
+
+
+### 💼 Other
+
+- **deps:** Bump the npm_and_yarn group across 1 directory with 2 updates
+
+- **deps:** Bump express-rate-limit
+
+- **deps:** Bump hono in the npm_and_yarn group across 1 directory
+
+- **deps-dev:** Bump undici
+
+- **deps:** Bump path-to-regexp
+
+- **deps:** Bump the npm_and_yarn group across 1 directory with 4 updates
+
+- **deps:** Bump ip-address
+
+- **deps:** Bump the npm_and_yarn group across 1 directory with 2 updates
+
+
+### 📚 Documentation
+
+- Обновили README, добавив новые значки для чата Telegram и Devin AI.
+
+- Обновление README.md с заменой значков на новые изображения для Telegram и DeepWiki
+
+- Добавлены новые правила по эволюции контракта и совместимости в файлы стиля кода
+
+
 ## [0.1.6] - 2026-03-01
 
 
