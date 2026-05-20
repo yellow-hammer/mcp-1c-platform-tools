@@ -16,7 +16,6 @@ describe("IpcClient", () => {
 				timeoutMs: 1000,
 			};
 			const client = new IpcClient(config);
-			// Доступа к config нет, проверяем через request — будет попытка подключения к 10.0.0.1:9999
 			assert.ok(client instanceof IpcClient);
 		});
 
@@ -34,7 +33,6 @@ describe("IpcClient", () => {
 			return new Promise<void>((resolve) => {
 				server = net.createServer((socket) => {
 					socket.on("data", (data: Buffer) => {
-						// Ожидаем JSON-RPC запрос; отвечаем одним JSON с result
 						const payload = JSON.stringify({
 							id: null,
 							result: { value: 42 },
@@ -165,6 +163,17 @@ describe("IpcClient", () => {
 				timeoutMs: 5000,
 			});
 			const result = await client.executeCommand("cmd.a", [], "/path");
+			assert.strictEqual(result, "done");
+		});
+
+		it("executeCommand принимает явный timeoutMs", async () => {
+			const client = new IpcClient({
+				host: "127.0.0.1",
+				port: serverPort,
+				timeoutMs: 5000,
+			});
+			// Увеличенный таймаут для wait-сценария — команда должна выполниться штатно
+			const result = await client.executeCommand("cmd.a", [{ wait: true }], "/path", 300_000);
 			assert.strictEqual(result, "done");
 		});
 	});

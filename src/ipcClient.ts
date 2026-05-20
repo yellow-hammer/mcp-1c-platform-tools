@@ -60,7 +60,7 @@ export class IpcClient {
 			host: config?.host ?? process.env.ONEC_IPC_HOST ?? "127.0.0.1",
 			port,
 			token: config?.token ?? process.env.ONEC_IPC_TOKEN ?? null,
-			timeoutMs: config?.timeoutMs ?? 60000,
+			timeoutMs: config?.timeoutMs ?? 60_000,
 		};
 	}
 
@@ -69,11 +69,13 @@ export class IpcClient {
 	 *
 	 * @param method — имя метода (например listCommands, executeCommand)
 	 * @param params — опциональные параметры
+	 * @param timeoutMs — таймаут ожидания ответа; если не задан, используется значение из конфига
 	 * @returns результат из response.result (при ошибке — reject с сообщением сервера)
 	 */
 	public async request<T = unknown>(
 		method: string,
-		params?: Record<string, unknown>
+		params?: Record<string, unknown>,
+		timeoutMs?: number
 	): Promise<T> {
 		const id = randomUUID();
 		const payload: IpcRequestPayload = {
@@ -87,7 +89,8 @@ export class IpcClient {
 		}
 
 		const message = `${JSON.stringify(payload)}\n`;
-		logger.debug(`IPC: запрос ${method} (id ${id}) → ${this.config.host}:${this.config.port}`);
+		const effectiveTimeout = timeoutMs ?? this.config.timeoutMs;
+		logger.debug(`IPC: запрос ${method} (id ${id}) → ${this.config.host}:${this.config.port} (таймаут ${effectiveTimeout} мс)`);
 
 		return new Promise<T>((resolve, reject) => {
 			const socket = new net.Socket();
@@ -124,13 +127,13 @@ export class IpcClient {
 				}
 				finished = true;
 				cleanup();
-				logger.error(`IPC: таймаут ${this.config.timeoutMs} мс при вызове ${method}`);
+				logger.error(`IPC: таймаут ${effectiveTimeout} мс при вызове ${method}`);
 				reject(
 					new Error(
-						"Таймаут ожидания ответа от расширения 1c-platform-tools по IPC"
+						`Таймаут ожидания ответа от расширения 1c-platform-tools по IPC (${effectiveTimeout} мс)`
 					)
 				);
-			}, this.config.timeoutMs);
+			}, effectiveTimeout);
 
 			socket.on("error", onError);
 
@@ -177,13 +180,13 @@ export class IpcClient {
 					finished = true;
 					clearTimeout(timeout);
 					cleanup();
-					const message =
+					const msg =
 						response.error.message || "Неизвестная ошибка IPC-сервера";
 					const code = response.error.code;
 					const fullMessage =
 						code && code !== ""
-							? `${message} (код: ${code})`
-							: message;
+							? `${msg} (код: ${code})`
+							: msg;
 					logger.error(`IPC: ошибка сервера — ${fullMessage}`);
 					reject(new Error(fullMessage));
 					return;
@@ -205,14 +208,16 @@ export class IpcClient {
 	 * Вызывает команду расширения в контексте указанного проекта.
 	 *
 	 * @param commandId — идентификатор команды (например 1c-platform-tools.configuration.loadFromSrc)
-	 * @param args — аргументы команды (массив)
+	 * @param args — аргументы команды; первым элементом рекомендуется передавать объект с флагами (wait, settingsFile и т.д.)
 	 * @param projectPath — абсолютный путь к корню проекта 1С
+	 * @param timeoutMs — таймаут ожидания; при wait: true рекомендуется 300 000 мс
 	 * @returns commandResult от сервера; при ok === false выбрасывает Error
 	 */
 	public async executeCommand(
 		commandId: string,
 		args: unknown[] | undefined,
-		projectPath: string
+		projectPath: string,
+		timeoutMs?: number
 	): Promise<unknown> {
 		const result = await this.request<{
 			ok?: boolean;
@@ -222,7 +227,7 @@ export class IpcClient {
 			commandId,
 			args,
 			projectPath,
-		});
+		}, timeoutMs);
 
 		if (result?.ok === false) {
 			throw new Error(
@@ -244,4 +249,3 @@ export class IpcClient {
 		return res?.commands ?? [];
 	}
 }
-

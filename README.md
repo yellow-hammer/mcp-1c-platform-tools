@@ -37,7 +37,7 @@ MCP-сервер предоставляет инструменты Model Context
   "mcpServers": {
     "mcp-1c-platform-tools": {
       "command": "node",
-      "args": ["${env:USERPROFILE}\\.cursor\\extensions\\yellow-hammer.mcp-1c-platform-tools-0.1.5\\out\\src\\index.js"],
+      "args": ["${env:USERPROFILE}\\.cursor\\extensions\\yellow-hammer.mcp-1c-platform-tools-0.1.7-universal\\out\\src\\index.js"],
       "env": {
         "ONEC_IPC_HOST": "127.0.0.1",
         "ONEC_IPC_PORT": "40241",
@@ -48,7 +48,7 @@ MCP-сервер предоставляет инструменты Model Context
 }
 ```
 
-**macOS/Linux:** в `args` — `"${env:HOME}/.cursor/extensions/yellow-hammer.mcp-1c-platform-tools-0.1.5/out/src/index.js"` (подставьте версию).
+**macOS/Linux:** в `args` — `"${env:HOME}/.cursor/extensions/yellow-hammer.mcp-1c-platform-tools-0.1.7-universal/out/src/index.js"` (подставьте фактическое имя папки из `~/.cursor/extensions/`).
 
 ### Глобальный файл
 
