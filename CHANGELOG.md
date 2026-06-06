@@ -5,6 +5,25 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/),
 и этот проект придерживается [Semantic Versioning](https://semver.org/lang/ru/).
 
+## [0.1.8] - 2026-06-06
+
+
+### 🚀 Features
+
+- Добавлены скрипты для генерации и обновления ссылки на установку MCP в файле README
+
+
+### 💼 Other
+
+- **deps:** Bump uuid in the npm_and_yarn group across 1 directory
+
+- **deps:** Bump qs in the npm_and_yarn group across 1 directory
+
+- **deps-dev:** Bump tmp in the npm_and_yarn group across 1 directory
+
+- **deps:** Bump hono in the npm_and_yarn group across 1 directory
+
+
 ## [0.1.7] - 2026-05-20
 
 
