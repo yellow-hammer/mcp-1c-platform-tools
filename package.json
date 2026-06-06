@@ -59,6 +59,8 @@
     "build": "tsc && node esbuild.config.mjs",
     "dev": "tsx src/index.ts",
     "changelog": "git-cliff --config cliff.toml --output CHANGELOG.md",
+    "cursor:mcp-link": "node scripts/gen-cursor-mcp-link.js",
+    "cursor:mcp-link:write": "node scripts/gen-cursor-mcp-link.js --write-readme",
     "vscode:prepublish": "npm run build",
     "package": "vsce package",
     "test": "npm run build && node --test out/test/formatCommandResult.test.js out/test/ipcClient.test.js out/test/toolName.test.js"

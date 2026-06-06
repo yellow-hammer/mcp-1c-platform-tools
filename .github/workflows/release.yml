@@ -85,10 +85,12 @@ jobs:
           VERSION="${{ steps.tag_version.outputs.version }}"
           # Обновляем версию в package.json и package-lock.json (игнорируем ошибку, если версия уже совпадает)
           npm version $VERSION --no-git-tag-version || echo "Version already matches, skipping update"
-          # Коммитим изменения версии, если они есть (формат не попадает в changelog)
-          git add package.json package-lock.json
+          # Обновляем Cursor install-ссылку и примеры путей в README под новую версию расширения
+          npm run cursor:mcp-link:write
+          # Коммитим изменения версии и README, если они есть (формат не попадает в changelog)
+          git add package.json package-lock.json README.md
           if git diff --staged --quiet; then
-            echo "No changes to commit (version already matches)"
+            echo "No changes to commit (version and README already match)"
           else
             git commit -m "chore(release): prepare for v$VERSION"
             git push origin $BRANCH

@@ -16,7 +16,7 @@ MCP-сервер предоставляет инструменты Model Context
 
 В **Cursor** расширение не может прописать MCP в настройки, поэтому конфиг нужно добавить вручную. Варианты:
 
-- **Кнопка:** [![Add 1C: Platform Tools MCP to Cursor](resources/mcp-install-dark.png)](https://cursor.com/en/install-mcp?name=mcp-1c-platform-tools&config=eyJjb21tYW5kIjoibm9kZSIsImFyZ3MiOlsiJHtlbnY6VVNFUlBST0ZJTEV9XFwuY3Vyc29yXFxleHRlbnNpb25zXFx5ZWxsb3ctaGFtbWVyLm1jcC0xYy1wbGF0Zm9ybS10b29scy0wLjEuNVxcb3V0XFxzcmNcXGluZGV4LmpzIl0sImVudiI6eyJPTkVDX0lQQ19IT1NUIjoiMTI3LjAuMC4xIiwiT05FQ19JUENfUE9SVCI6IjQwMjQxIiwiT05FQ19JUENfVE9LRU4iOiIifX0%3D) - подставит в `mcp.json` конфиг как в примере ниже (хост 127.0.0.1, порт 40241, токен пустой).
+- **Кнопка:** [![Add 1C: Platform Tools MCP to Cursor](resources/mcp-install-dark.png)](https://cursor.com/en/install-mcp?name=mcp-1c-platform-tools&config=eyJjb21tYW5kIjoibm9kZSIsImFyZ3MiOlsiJHtlbnY6VVNFUlBST0ZJTEV9XFwuY3Vyc29yXFxleHRlbnNpb25zXFx5ZWxsb3ctaGFtbWVyLm1jcC0xYy1wbGF0Zm9ybS10b29scy0wLjEuNy11bml2ZXJzYWxcXG91dFxcc3JjXFxpbmRleC5qcyJdLCJlbnYiOnsiT05FQ19JUENfSE9TVCI6IjEyNy4wLjAuMSIsIk9ORUNfSVBDX1BPUlQiOiI0MDI0MSIsIk9ORUNfSVBDX1RPS0VOIjoiIn19) - подставит в `mcp.json` конфиг как в примере ниже (хост 127.0.0.1, порт 40241, токен пустой).
 - **Вручную:** см. конфиг ниже.
 
 ### Конфиг для Cursor (ручная настройка)
