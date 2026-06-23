@@ -1,11 +1,11 @@
 /**
  * Логгер расширения: пишет в собственный LogOutputChannel VS Code
- * («MCP 1C Platform Tools»). Уровень, таймстемп и фильтрацию по уровню
+ * («1C: Platform Tools MCP»). Уровень, таймстемп и фильтрацию по уровню
  * обеспечивает сам VS Code (селектор уровня у канала Output / «Developer: Set Log Level…»).
  */
 import * as vscode from "vscode";
 
-const OUTPUT_CHANNEL_NAME = "MCP 1C Platform Tools";
+const OUTPUT_CHANNEL_NAME = "1C: Platform Tools MCP";
 
 let outputChannel: vscode.LogOutputChannel | undefined;
 
