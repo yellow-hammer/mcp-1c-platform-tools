@@ -13,7 +13,7 @@ alwaysApply: true
 - **MCP-сервер (standalone)**: `src/index.ts` — создаёт McpServer (версия из package.json), получает список команд расширения по IPC (`listCommands()`), регистрирует один инструмент на команду. Транспорт: stdio.
 - **IPC-клиент**: `src/ipcClient.ts` — TCP-клиент к IPC-серверу расширения (хост/порт из env или по умолчанию). Методы: `listCommands()`, `executeCommand(commandId, args, projectPath)`.
 - **Имена инструментов**: `src/toolName.ts` — `commandIdToToolName(commandId)` преобразует command ID расширения (например `1c-platform-tools.configuration.loadFromSrc`) в имена MCP-инструментов с сокращениями так, чтобы **суммарная длина «имя сервера + имя инструмента» не превышала 60 символов** (ограничение платформы). Допустимые сокращения (1Cpt, 1cpt) и правило 60 символов — в `.cursor/rules/naming-abbreviations.mdc`.
-- **Логирование**: `src/logger.ts` — OutputChannel расширения; `src/loggerServer.ts` — вывод в stderr для standalone-процесса MCP (уровень из env `MCP_1C_LOG_LEVEL`).
+- **Логирование**: `src/logger.ts` — собственный `LogOutputChannel` расширения (канал «MCP 1C Platform Tools»; уровень, таймстемп и фильтрацию задаёт VS Code); `src/loggerServer.ts` — вывод в stderr для standalone-процесса MCP (уровень из env `MCP_1C_LOG_LEVEL`).
 - **Иконка**: `resources/1c-icon.png` — иконка расширения, указывается в package.json.
 
 ## Динамическая регистрация инструментов
