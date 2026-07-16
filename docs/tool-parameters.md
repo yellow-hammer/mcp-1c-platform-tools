@@ -9,6 +9,25 @@
 | `ibConnection` | Явная строка подключения к ИБ. Без неё берётся значение из файла настроек, иначе `/F./build/ib` |
 | `pathsOverride` | Переопределение стандартных каталогов проекта (см. ниже) |
 | `wait` | Ждать завершения и вернуть `{ success, exitCode, stdout, stderr, artifact, durationMs }`. По умолчанию `false`: команда уходит в терминал, управление возвращается сразу |
+| `sha` | SHA коммита для `configuration_loadIncFromSrc`: изменения загружаются от него до текущего состояния (пустая строка — полная загрузка). Без параметра команда запросит ввод в UI |
+| `extensions` | Явный список имён расширений для `extensions_*`; без него используется сохранённый выбор проекта (или все расширения) |
+| `frameworks` | Включаемые тестовые фреймворки для `testing_configure`: `vanessa`, `xunit`, `yaxunit`, `onescript`, `onebdd`. Перечисленные включаются, остальные выключаются, недостающие каталоги создаются |
+| `execute` | Путь к внешней обработке/отчёту (.epf/.erf) для `enterprise_run` (`vrunner run --execute`) |
+| `command` | Строка параметров запуска `/C` для `enterprise_run` (`vrunner run --command`) |
+
+## Запуск обработок: enterprise_run
+
+Служебные шаги инициализации (загрузка фикстур, служебные EPF) выполняются инструментом `enterprise_run`; нужен хотя бы один из `execute`/`command`:
+
+```jsonc
+{
+  "projectPath": "C:/work/erp",
+  "execute": "./build/out/epf/ЗагрузкаФикстур.epf",
+  "command": "Путь=./fixtures/Константы.xml;ЗавершитьРаботуСистемы",
+  "settingsFile": "tools/vrunner.init.json",
+  "wait": true
+}
+```
 
 ## Профили запуска и settingsFile
 

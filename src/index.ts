@@ -49,6 +49,40 @@ const baseParamsShape = {
 		})
 		.optional()
 		.describe("Переопределение стандартных путей src/cf, build/out, src/cfe, src/epf, src/erf относительно projectPath"),
+	sha: z
+		.string()
+		.optional()
+		.describe(
+			"SHA коммита для инкрементальной загрузки конфигурации (cfg_loadIncFromSrc). " +
+			"Пустая строка — полная загрузка. Без параметра команда запросит ввод в UI."
+		),
+	extensions: z
+		.array(z.string())
+		.optional()
+		.describe(
+			"Явный список имён расширений для команд extensions_*. " +
+			"Без него используется сохранённый выбор проекта (или все расширения)."
+		),
+	frameworks: z
+		.array(z.string())
+		.optional()
+		.describe(
+			"Ключи включаемых тестовых фреймворков для testing_configure: " +
+			"vanessa, xunit, yaxunit, onescript, onebdd. Остальные выключаются."
+		),
+	execute: z
+		.string()
+		.optional()
+		.describe(
+			"Путь к внешней обработке/отчёту (.epf/.erf) для enterprise_run (vrunner run --execute)."
+		),
+	command: z
+		.string()
+		.optional()
+		.describe(
+			"Строка параметров запуска /C для enterprise_run (vrunner run --command), " +
+			"например 'Путь=./fixtures/Константы.xml;ЗавершитьРаботуСистемы'."
+		),
 	wait: z
 		.boolean()
 		.optional()
@@ -88,7 +122,17 @@ async function runTool(
 	try {
 		const result = await ipcClient.executeCommand(
 			commandId,
-			[{ wait, settingsFile: params.settingsFile, ibConnection: params.ibConnection, pathsOverride: params.pathsOverride }],
+			[{
+				wait,
+				settingsFile: params.settingsFile,
+				ibConnection: params.ibConnection,
+				pathsOverride: params.pathsOverride,
+				sha: params.sha,
+				extensions: params.extensions,
+				frameworks: params.frameworks,
+				execute: params.execute,
+				command: params.command,
+			}],
 			params.projectPath,
 			timeoutMs
 		);
