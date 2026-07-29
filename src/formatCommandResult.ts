@@ -25,6 +25,28 @@ export interface StructuredCommandResult {
 	durationMs?: number;
 	/** Ошибки синтакс-проверки (только для test_syntaxCheck). */
 	errors?: StructuredSyntaxError[];
+	/** Сводка прогона тестов по jUnit-отчёту (тестовые команды). */
+	tests?: TestRunStats;
+}
+
+/**
+ * Сводка прогона тестов, которую возвращает расширение по jUnit-отчёту.
+ */
+export interface TestRunStats {
+	/** Всего тестов в отчёте. */
+	total: number;
+	/** Успешно пройдено. */
+	passed: number;
+	/** Упало (failure). */
+	failed: number;
+	/** Ошибки выполнения (error). */
+	errors: number;
+	/** Пропущено. */
+	skipped: number;
+	/** Файл или каталог отчёта. */
+	reportPath: string;
+	/** Имена упавших тестов (с ограничением количества). */
+	failedTests: string[];
 }
 
 /**
@@ -68,7 +90,25 @@ function isStructuredResult(value: unknown): value is StructuredCommandResult {
 function formatStructured(r: StructuredCommandResult): string {
 	const lines: string[] = [];
 
-	if (r.success) {
+	// Для прогонов тестов итог формируется по фактическому результату тестов,
+	// а не по коду возврата процесса: «Успех» без данных о тестах вводил
+	// агента в заблуждение.
+	if (r.tests) {
+		const t = r.tests;
+		const green = t.failed === 0 && t.errors === 0 && t.total > 0;
+		lines.push(
+			green
+				? `Тесты пройдены: ${t.passed} из ${t.total}${t.skipped > 0 ? ` (пропущено: ${t.skipped})` : ""}`
+				: `Тесты не пройдены: упало ${t.failed}, ошибок ${t.errors}, успешно ${t.passed} из ${t.total}`
+		);
+		lines.push(`Отчёт: ${t.reportPath}`);
+		if (t.failedTests.length > 0) {
+			lines.push("Упавшие тесты:");
+			for (const name of t.failedTests) {
+				lines.push(`  - ${name}`);
+			}
+		}
+	} else if (r.success) {
 		lines.push("Успех");
 	} else {
 		lines.push(`Ошибка (exitCode: ${r.exitCode})`);

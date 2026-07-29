@@ -144,4 +144,34 @@ describe("formatCommandResult", () => {
 		assert.strictEqual(formatCommandResult(42), "Выполнено.");
 		assert.strictEqual(formatCommandResult(true), "Выполнено.");
 	});
+
+	it("тестовая сводка: не пройдено и упавшие в ответе", () => {
+		const text = formatCommandResult({
+			success: true,
+			exitCode: 0,
+			stdout: "",
+			stderr: "",
+			tests: {
+				total: 3, passed: 1, failed: 2, errors: 0, skipped: 0,
+				reportPath: "build/out/junit", failedTests: ["Смоук: Красный"],
+			},
+		});
+		assert.match(text, /Тесты не пройдены: упало 2/);
+		assert.match(text, /Смоук: Красный/);
+		assert.doesNotMatch(text, /^Успех/m);
+	});
+
+	it("тестовая сводка: зелёный прогон с количеством", () => {
+		const text = formatCommandResult({
+			success: true,
+			exitCode: 0,
+			stdout: "",
+			stderr: "",
+			tests: {
+				total: 5, passed: 5, failed: 0, errors: 0, skipped: 0,
+				reportPath: "build/out/junit", failedTests: [],
+			},
+		});
+		assert.match(text, /Тесты пройдены: 5 из 5/);
+	});
 });
