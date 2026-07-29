@@ -41,6 +41,9 @@
 ```jsonc
 // обработки лежат в tools/epf, а не в src/epf
 { "projectPath": "C:/work/erp", "pathsOverride": { "epf": "tools/epf" } }
+
+// внешние отчёты в каталоге src/ert (историческое имя вместо src/erf)
+{ "projectPath": "C:/work/erp", "pathsOverride": { "erf": "src/ert" } }
 ```
 
 ## Состояние окружения и контекст выполнения

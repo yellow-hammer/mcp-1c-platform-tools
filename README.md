@@ -14,30 +14,27 @@ MCP-сервер предоставляет инструменты Model Context
 
 В **VS Code** дополнительная настройка не нужна: расширение само регистрирует MCP. Достаточно установить оба расширения и включить IPC.
 
-В **Cursor** расширение не может прописать MCP в настройки, поэтому конфиг нужно добавить вручную. Варианты:
+В **Cursor** провайдер MCP-серверов VS Code не поддерживается, поэтому сервер подключается через файл `.cursor/mcp.json` проекта. Расширение умеет создавать и обновлять его само:
 
-- **Кнопка:** [![Add 1C: Platform Tools MCP to Cursor](resources/mcp-install-dark.png)](https://cursor.com/en/install-mcp?name=mcp-1c-platform-tools&config=eyJjb21tYW5kIjoibm9kZSIsImFyZ3MiOlsiJHtlbnY6VVNFUlBST0ZJTEV9XFwuY3Vyc29yXFxleHRlbnNpb25zXFx5ZWxsb3ctaGFtbWVyLm1jcC0xYy1wbGF0Zm9ybS10b29scy0wLjEuOS11bml2ZXJzYWxcXG91dFxcc3JjXFxpbmRleC5qcyJdLCJlbnYiOnsiT05FQ19JUENfSE9TVCI6IjEyNy4wLjAuMSIsIk9ORUNfSVBDX1BPUlQiOiI0MDI0MSIsIk9ORUNfSVBDX1RPS0VOIjoiIn19) - подставит в `mcp.json` конфиг как в примере ниже (хост 127.0.0.1, порт 40241, токен пустой).
-- **Вручную:** см. конфиг ниже.
+1. Установите расширение: [![Установить в Cursor](resources/mcp-install-dark.png)](https://open-vsx.org/extension/yellow-hammer/mcp-1c-platform-tools)
+2. Откройте проект 1С.
+3. Палитра команд (F1) → **1C: Platform Tools MCP: Настроить MCP для Cursor**, либо в дереве **Инструменты 1С** → **Навыки для AI** → **Настроить MCP для Cursor**.
+4. Перезагрузите окно.
 
-### Конфиг для Cursor (ручная настройка)
+Команда пишет в `.cursor/mcp.json` актуальный путь к серверу и параметры IPC из настроек `1c-platform-tools.ipc.*`; другие серверы в файле сохраняются.
 
-Конфиг можно положить **в проект** (только для этого проекта) или **глобально** (для всех проектов).
+Путь к серверу содержит версию расширения, поэтому после его обновления запись устаревает и сервер падает с `MODULE_NOT_FOUND`. Расширение чинит это само: при запуске обновляет путь, если он указывает на другую установку этого же расширения. Путь, прописанный вручную (например, на сборку из исходников), не трогается.
 
-**В проекте (рекомендуется):**
+### Ручная настройка
 
-1. В **корне проекта 1С** (папка с `packagedef`) создайте папку `.cursor`, если её нет.
-2. Создайте или откройте файл **`.cursor/mcp.json`** в этом корне.
-3. Вставьте конфиг ниже (в пути — версия расширения, в `env` — порт и токен из настроек 1c-platform-tools).
-4. Перезагрузите окно (Ctrl+Shift+P → «Developer: Reload Window»).
-
-**Пример для проекта (Windows):**
+Если конфиг нужно завести без расширения, структура такая:
 
 ```json
 {
   "mcpServers": {
     "mcp-1c-platform-tools": {
       "command": "node",
-      "args": ["${env:USERPROFILE}\\.cursor\\extensions\\yellow-hammer.mcp-1c-platform-tools-0.1.9-universal\\out\\src\\index.js"],
+      "args": ["<путь к каталогу расширения>/out/src/index.js"],
       "env": {
         "ONEC_IPC_HOST": "127.0.0.1",
         "ONEC_IPC_PORT": "40241",
@@ -48,20 +45,14 @@ MCP-сервер предоставляет инструменты Model Context
 }
 ```
 
-**macOS/Linux:** в `args` — `"${env:HOME}/.cursor/extensions/yellow-hammer.mcp-1c-platform-tools-0.1.9-universal/out/src/index.js"` (подставьте фактическое имя папки из `~/.cursor/extensions/`).
+Каталог расширения: `%USERPROFILE%\.cursor\extensions\yellow-hammer.mcp-1c-platform-tools-<версия>-universal` (Windows) или `~/.cursor/extensions/...` (macOS/Linux). Такой путь придётся обновлять после каждого обновления расширения — команда выше делает это автоматически.
 
-### Глобальный файл
-
-Вместо файла в проекте можно использовать один конфиг для всех проектов:
-
-- **Windows:** `%USERPROFILE%\.cursor\mcp.json`
-- **macOS/Linux:** `~/.cursor/mcp.json`
-
-Структура `mcpServers` та же. После изменений перезагрузите окно Cursor.
+Глобальный конфиг (`%USERPROFILE%\.cursor\mcp.json`) работает так же, но его расширение не обновляет: для нескольких проектов надёжнее проектный файл.
 
 ## Документация
 
-- [Общие параметры инструментов](docs/tool-parameters.md) — `settingsFile` и выбор профиля прогона, `pathsOverride` и конвенция каталогов проекта, синхронный режим `wait`.
+- [Общие параметры инструментов](docs/tool-parameters.md)
+- [Что писать агенту](docs/examples.md) — фразы для чата и что произойдёт: тесты, профили запуска, конфигурация, база.
 
 ---
 

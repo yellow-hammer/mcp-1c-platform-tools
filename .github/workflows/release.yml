@@ -89,9 +89,7 @@ jobs:
           VERSION="${{ steps.ver.outputs.version }}"
           # Обновляем версию в package.json и package-lock.json (ошибка игнорируется, если версия уже совпадает)
           npm version $VERSION --no-git-tag-version || echo "Версия уже совпадает — пропуск"
-          # Обновляем Cursor install-ссылку и примеры путей в README под новую версию
-          npm run cursor:mcp-link:write
-          git add package.json package-lock.json README.md
+          git add package.json package-lock.json
           if git diff --staged --quiet; then
             echo "Версия уже совпадает — коммит не нужен"
           else
