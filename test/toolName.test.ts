@@ -7,6 +7,7 @@ import assert from "node:assert";
 import {
 	commandIdToToolName,
 	describeCommand,
+	uniqueToolName,
 	getCombinedLength,
 	MAX_COMBINED_LENGTH,
 	MCP_SERVER_NAME,
@@ -108,5 +109,37 @@ describe("describeCommand: команды интерфейса", () => {
 			supportsWait: true,
 		});
 		assert.doesNotMatch(text, /Исход операции не возвращается/);
+	});
+});
+
+describe("uniqueToolName", () => {
+	it("свободное имя отдаётся как есть", () => {
+		const used = new Set<string>();
+		assert.strictEqual(
+			uniqueToolName("1c-platform-tools.test.runXUnit", used),
+			commandIdToToolName("1c-platform-tools.test.runXUnit")
+		);
+	});
+
+	it("занятое имя получает суффикс и не повторяется", () => {
+		const used = new Set<string>();
+		const first = uniqueToolName("1c-platform-tools.test.runXUnit", used);
+		const second = uniqueToolName("1c-platform-tools.test.runXUnit", used);
+		const third = uniqueToolName("1c-platform-tools.test.runXUnit", used);
+
+		assert.notStrictEqual(second, first);
+		assert.notStrictEqual(third, second);
+		assert.strictEqual(used.size, 3);
+	});
+
+	it("запасное имя укладывается в лимит длины", () => {
+		const used = new Set<string>();
+		const longId = "1c-platform-tools.configuration.loadIncrementFromSrcWithVeryLongTail";
+		uniqueToolName(longId, used);
+		const fallback = uniqueToolName(longId, used);
+		assert.ok(
+			getCombinedLength(fallback) <= MAX_COMBINED_LENGTH,
+			`длина ${getCombinedLength(fallback)} превышает лимит`
+		);
 	});
 });

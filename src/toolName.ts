@@ -93,3 +93,30 @@ export function describeCommand(descriptor: CommandDescriptor): string {
 	const scope = category ? `${category}: ` : "";
 	return `${scope}${title}. Команда расширения ${descriptor.id}.${uiOnly}`;
 }
+
+/**
+ * Подбирает имя инструмента, не занятое другой командой.
+ *
+ * Сокращения имён теоретически могут совпасть у двух команд. Повторная
+ * регистрация имени в SDK бросает исключение, и без запасного имени сервер
+ * остался бы вовсе без инструментов.
+ *
+ * @param commandId — идентификатор команды расширения
+ * @param used — уже занятые имена (пополняется выбранным)
+ * @returns уникальное имя инструмента
+ */
+export function uniqueToolName(commandId: string, used: Set<string>): string {
+	const base = commandIdToToolName(commandId);
+	if (!used.has(base)) {
+		used.add(base);
+		return base;
+	}
+	for (let suffix = 2; ; suffix++) {
+		const trimmed = base.slice(0, MAX_TOOL_NAME_LENGTH - String(suffix).length - 1);
+		const candidate = `${trimmed}_${suffix}`;
+		if (!used.has(candidate)) {
+			used.add(candidate);
+			return candidate;
+		}
+	}
+}

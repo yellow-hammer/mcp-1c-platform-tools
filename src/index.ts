@@ -7,7 +7,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { IpcClient, CommandDescriptor } from "./ipcClient.js";
 import { formatCommandResult, isFailedResult } from "./formatCommandResult.js";
 import { logger } from "./loggerServer.js";
-import { commandIdToToolName, describeCommand } from "./toolName.js";
+import { describeCommand, uniqueToolName } from "./toolName.js";
 import { paramsForCommand } from "./toolParams.js";
 
 /**
@@ -136,6 +136,7 @@ async function main(): Promise<void> {
 
 	const ipcClient = new IpcClient();
 	const registered = new Set<string>();
+	const usedNames = new Set<string>();
 
 	/**
 	 * Регистрирует инструменты для команд, которых ещё нет.
@@ -150,15 +151,22 @@ async function main(): Promise<void> {
 				continue;
 			}
 			registered.add(descriptor.id);
-			server.registerTool(
-				commandIdToToolName(descriptor.id),
-				{
-					description: describeCommand(descriptor),
-					inputSchema: paramsForCommand(descriptor.id),
-				},
-				async (input) => runTool(ipcClient, descriptor.id, input as unknown as ToolParams)
-			);
-			added += 1;
+			try {
+				server.registerTool(
+					uniqueToolName(descriptor.id, usedNames),
+					{
+						description: describeCommand(descriptor),
+						inputSchema: paramsForCommand(descriptor.id),
+					},
+					async (input) => runTool(ipcClient, descriptor.id, input as unknown as ToolParams)
+				);
+				added += 1;
+			} catch (err) {
+				// Одна проблемная команда не должна оставлять агента совсем без
+				// инструментов: пропускаем её и регистрируем остальные
+				const message = err instanceof Error ? err.message : String(err);
+				logger.error(`Инструмент для команды ${descriptor.id} не зарегистрирован: ${message}`);
+			}
 		}
 		return added;
 	};
@@ -177,6 +185,7 @@ async function main(): Promise<void> {
 		// открыт, инструментов не будет до перезапуска сервера. Заглушка
 		// повторяет попытку и регистрирует инструменты, когда расширение
 		// отозвалось; клиент узнаёт о них по notifications/tools/list_changed
+		usedNames.add("onec_platform_tools_status");
 		const placeholder = server.registerTool(
 			"onec_platform_tools_status",
 			{
