@@ -21,6 +21,7 @@ scripts/**
 
 # CI
 .github/**
+.claude/**
 
 # Скомпилированные тесты (не нужны в VSIX)
 out/test/**
