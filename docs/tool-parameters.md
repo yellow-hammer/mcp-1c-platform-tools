@@ -8,7 +8,12 @@
 | `settingsFile` | Файл настроек vanessa-runner относительно `projectPath`. По умолчанию активный профиль проекта (`env.json`) |
 | `ibConnection` | Явная строка подключения к ИБ. Без неё берётся значение из файла настроек, иначе `/F./build/ib` |
 | `pathsOverride` | Переопределение стандартных каталогов проекта (см. ниже) |
-| `wait` | Ждать завершения и вернуть `{ success, exitCode, stdout, stderr, artifact, durationMs }`. По умолчанию `false`: команда уходит в терминал, управление возвращается сразу |
+| `sha` | SHA коммита для `configuration_loadIncFromSrc`; пустая строка — полная загрузка |
+| `extensions` | Явный список имён расширений для `extensions_*`; без него — сохранённый выбор проекта |
+| `profile` | Имя env-профиля для `env_selectProfile` (id, имя файла или подпись) |
+| `frameworks` | Включаемые тестовые фреймворки для `testing_configure` (vanessa, xunit, yaxunit, onescript, onebdd) |
+| `execute`, `command` | Путь к EPF/ERF и строка `/C` для `enterprise_run` |
+| `wait` | Ждать завершения и вернуть `{ success, exitCode, stdout, stderr, tests, artifact, durationMs }`. По умолчанию `true`: без ожидания исход операции неизвестен. `false` — команда уходит в UI-терминал, управление возвращается сразу |
 
 ## Профили запуска и settingsFile
 

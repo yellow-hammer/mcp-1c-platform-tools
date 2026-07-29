@@ -49,15 +49,55 @@ const baseParamsShape = {
 		})
 		.optional()
 		.describe("Переопределение стандартных путей src/cf, build/out, src/cfe, src/epf, src/erf относительно projectPath"),
+	sha: z
+		.string()
+		.optional()
+		.describe(
+			"SHA коммита для инкрементальной загрузки конфигурации (cfg_loadIncFromSrc). " +
+			"Пустая строка — полная загрузка."
+		),
+	extensions: z
+		.array(z.string())
+		.optional()
+		.describe(
+			"Явный список имён расширений для команд extensions_*. " +
+			"Без него используется сохранённый выбор проекта (или все расширения)."
+		),
+	profile: z
+		.string()
+		.optional()
+		.describe(
+			"Имя env-профиля для env_selectProfile: id (dev), имя файла (env.dev.json) или подпись."
+		),
+	frameworks: z
+		.array(z.string())
+		.optional()
+		.describe(
+			"Ключи включаемых тестовых фреймворков для testing_configure: " +
+			"vanessa, xunit, yaxunit, onescript, onebdd. Остальные выключаются."
+		),
+	execute: z
+		.string()
+		.optional()
+		.describe(
+			"Путь к внешней обработке/отчёту (.epf/.erf) для enterprise_run (vrunner run --execute)."
+		),
+	command: z
+		.string()
+		.optional()
+		.describe(
+			"Строка параметров запуска /C для enterprise_run (vrunner run --command)."
+		),
 	wait: z
 		.boolean()
 		.optional()
-		.default(false)
+		.default(true)
 		.describe(
 			"Ждать завершения операции и вернуть структурированный результат " +
-			"{ success, exitCode, stdout, stderr, artifact, durationMs }. " +
-			"По умолчанию false — команда запускается в UI-терминале и возвращает управление немедленно. " +
-			"Используйте wait: true для автономных агентных сценариев (проверка, сборка, фикс в цикле)."
+			"{ success, exitCode, stdout, stderr, tests, artifact, durationMs }. " +
+			"По умолчанию true: без ожидания исход операции неизвестен. " +
+			"wait: false запускает команду в UI-терминале и возвращает управление немедленно — " +
+			"нужен, когда пользователь смотрит ход выполнения сам."
 		),
 } as const;
 
@@ -82,13 +122,24 @@ async function runTool(
 	commandId: string,
 	params: BaseParams
 ): Promise<{ content: Array<{ type: "text"; text: string }> }> {
-	const wait = params.wait ?? false;
+	const wait = params.wait ?? true;
 	const timeoutMs = wait ? TIMEOUT_WAIT_MS : TIMEOUT_DEFAULT_MS;
 
 	try {
 		const result = await ipcClient.executeCommand(
 			commandId,
-			[{ wait, settingsFile: params.settingsFile, ibConnection: params.ibConnection, pathsOverride: params.pathsOverride }],
+			[{
+				wait,
+				settingsFile: params.settingsFile,
+				ibConnection: params.ibConnection,
+				pathsOverride: params.pathsOverride,
+				sha: params.sha,
+				extensions: params.extensions,
+				profile: params.profile,
+				frameworks: params.frameworks,
+				execute: params.execute,
+				command: params.command,
+			}],
 			params.projectPath,
 			timeoutMs
 		);
