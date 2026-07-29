@@ -16,10 +16,16 @@
 			"skipFiles": ["<node_internals>/**"]
 		},
 		{
+			// Сервер запускает агентский клиент из mcp.json проекта
+			// (node --inspect=9229 out/src/index.js); эта конфигурация собирает
+			// свежий out из исходников и ждёт процесс на порту, переживая
+			// рестарты сервера (restart: true).
 			"name": "MCP: подключиться к процессу (port 9229)",
 			"type": "node",
 			"request": "attach",
 			"port": 9229,
+			"restart": true,
+			"preLaunchTask": "Скомпилировать TypeScript",
 			"skipFiles": ["<node_internals>/**"],
 			"localRoot": "${workspaceFolder:mcp-1c-platform-tools}",
 			"remoteRoot": "${workspaceFolder:mcp-1c-platform-tools}"
