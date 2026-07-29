@@ -225,3 +225,50 @@ describe("IpcClient", () => {
 		});
 	});
 });
+
+describe("request — подробности ошибки", () => {
+	let server: net.Server;
+	let serverPort: number;
+
+	before(() => {
+		return new Promise<void>((resolve) => {
+			server = net.createServer((socket) => {
+				socket.on("data", () => {
+					socket.write(
+						JSON.stringify({
+							id: null,
+							error: {
+								message: "Путь projectPath не совпадает с текущей рабочей областью VS Code",
+								code: "WORKSPACE_MISMATCH",
+								details: { projectPath: "C:/wrong", workspaceRoots: ["C:/work/erp"] },
+							},
+						}) + "\n"
+					);
+					socket.end();
+				});
+			});
+			server.listen(0, "127.0.0.1", () => {
+				const addr = server.address();
+				serverPort = typeof addr === "object" && addr?.port ? addr.port : 0;
+				resolve();
+			});
+		});
+	});
+
+	after(() => {
+		return new Promise<void>((resolve) => server.close(() => resolve()));
+	});
+
+	it("каталоги рабочей области попадают в сообщение", async () => {
+		const client = new IpcClient({ host: "127.0.0.1", port: serverPort, token: null, timeoutMs: 2000 });
+
+		await assert.rejects(
+			() => client.request("executeCommand"),
+			(error: Error) => {
+				assert.match(error.message, /WORKSPACE_MISMATCH/);
+				assert.match(error.message, /C:\/work\/erp/);
+				return true;
+			}
+		);
+	});
+});

@@ -4,11 +4,11 @@
  */
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { z } from "zod";
 import { IpcClient, CommandDescriptor } from "./ipcClient.js";
 import { formatCommandResult, isFailedResult } from "./formatCommandResult.js";
 import { logger } from "./loggerServer.js";
 import { commandIdToToolName, describeCommand } from "./toolName.js";
+import { paramsForCommand } from "./toolParams.js";
 
 /**
  * Таймаут IPC для команд без ожидания (мс).
@@ -35,89 +35,20 @@ function readWaitTimeout(): number {
 	return Number.isFinite(raw) && raw > 0 ? raw : 1_800_000;
 }
 
-/**
- * Схема параметров инструментов.
- * projectPath обязателен; остальные поля опциональны.
- */
-const baseParamsShape = {
-	projectPath: z
-		.string()
-		.min(1, "projectPath не должен быть пустым")
-		.describe("Абсолютный путь к корню проекта 1С (где лежит packagedef/env.json)"),
-	settingsFile: z
-		.string()
-		.optional()
-		.describe("Путь к env.json относительно projectPath. По умолчанию: env.json"),
-	ibConnection: z
-		.string()
-		.optional()
-		.describe("Явная строка подключения к ИБ. Если не задана, берётся из env.json или /F./build/ib"),
-	pathsOverride: z
-		.object({
-			cf: z.string().optional(),
-			out: z.string().optional(),
-			cfe: z.string().optional(),
-			epf: z.string().optional(),
-			erf: z.string().optional(),
-		})
-		.optional()
-		.describe("Переопределение стандартных путей src/cf, build/out, src/cfe, src/epf, src/erf относительно projectPath"),
-	sha: z
-		.string()
-		.optional()
-		.describe(
-			"SHA коммита для инкрементальной загрузки конфигурации (cfg_loadIncFromSrc). " +
-			"Пустая строка — полная загрузка."
-		),
-	extensions: z
-		.array(z.string())
-		.optional()
-		.describe(
-			"Явный список имён расширений для команд extensions_*. " +
-			"Без него используется сохранённый выбор проекта (или все расширения)."
-		),
-	profile: z
-		.string()
-		.optional()
-		.describe(
-			"Имя env-профиля для env_selectProfile: id (dev), имя файла (env.dev.json) или подпись."
-		),
-	frameworks: z
-		.array(z.string())
-		.optional()
-		.describe(
-			"Ключи включаемых тестовых фреймворков для testing_configure: " +
-			"vanessa, xunit, yaxunit, onescript, onebdd. Остальные выключаются."
-		),
-	execute: z
-		.string()
-		.optional()
-		.describe(
-			"Путь к внешней обработке/отчёту (.epf/.erf) для enterprise_run (vrunner run --execute)."
-		),
-	command: z
-		.string()
-		.optional()
-		.describe(
-			"Строка параметров запуска /C для enterprise_run (vrunner run --command)."
-		),
-	wait: z
-		.boolean()
-		.optional()
-		.default(true)
-		.describe(
-			"Ждать завершения операции и вернуть структурированный результат " +
-			"{ success, exitCode, stdout, stderr, tests, artifact, durationMs }. " +
-			"По умолчанию true: без ожидания исход операции неизвестен. " +
-			"wait: false запускает команду в UI-терминале и возвращает управление немедленно — " +
-			"нужен, когда пользователь смотрит ход выполнения сам."
-		),
-} as const;
-
-/** Тип параметров инструмента, выводимый из baseParamsShape. */
-type BaseParams = {
-	[K in keyof typeof baseParamsShape]: z.infer<(typeof baseParamsShape)[K]>;
-};
+/** Параметры вызова инструмента: набор полей зависит от команды. */
+interface ToolParams {
+	projectPath: string;
+	wait?: boolean;
+	settingsFile?: string;
+	ibConnection?: string;
+	pathsOverride?: Record<string, string | undefined>;
+	sha?: string;
+	extensions?: string[];
+	profile?: string;
+	frameworks?: string[];
+	execute?: string;
+	command?: string;
+}
 
 /**
  * Выполняет команду расширения по IPC и возвращает контент для MCP-инструмента.
@@ -133,7 +64,7 @@ type BaseParams = {
 async function runTool(
 	ipcClient: IpcClient,
 	commandId: string,
-	params: BaseParams
+	params: ToolParams
 ): Promise<{ content: Array<{ type: "text"; text: string }>; isError?: boolean }> {
 	const wait = params.wait ?? true;
 	const timeoutMs = wait ? TIMEOUT_WAIT_MS : TIMEOUT_DEFAULT_MS;
@@ -221,8 +152,11 @@ async function main(): Promise<void> {
 			registered.add(descriptor.id);
 			server.registerTool(
 				commandIdToToolName(descriptor.id),
-				{ description: describeCommand(descriptor), inputSchema: baseParamsShape },
-				async (input) => runTool(ipcClient, descriptor.id, input as BaseParams)
+				{
+					description: describeCommand(descriptor),
+					inputSchema: paramsForCommand(descriptor.id),
+				},
+				async (input) => runTool(ipcClient, descriptor.id, input as unknown as ToolParams)
 			);
 			added += 1;
 		}
