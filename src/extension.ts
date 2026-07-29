@@ -145,7 +145,8 @@ async function configureCursor(serverPath: string, onlyIfStale: boolean): Promis
 			logger.info(`Конфиг Cursor ${outcome === "created" ? "создан" : "обновлён"}: ${folder.name}`);
 			if (!onlyIfStale) {
 				void vscode.window.showInformationMessage(
-					`Конфиг MCP для Cursor записан в ${folder.name}/.cursor/mcp.json. Перезагрузите окно.`
+					`Конфиг MCP для Cursor записан в ${folder.name}/.cursor/mcp.json. ` +
+					"Перезагрузите окно, а затем включите сервер mcp-1c-platform-tools в настройках MCP: новый сервер Cursor добавляет выключенным."
 				);
 			} else {
 				void vscode.window.showInformationMessage(

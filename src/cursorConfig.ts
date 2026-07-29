@@ -36,6 +36,9 @@ export type CursorConfigOutcome = "created" | "updated" | "unchanged";
  */
 export function buildServerEntry(config: CursorServerConfig): Record<string, unknown> {
 	return {
+		// Новый сервер Cursor добавляет выключенным; поле понимают не все
+		// версии, поэтому пользователю о тумблере сообщается и текстом
+		disabled: false,
 		command: "node",
 		args: [config.serverPath.replaceAll("\\", "/")],
 		env: {
