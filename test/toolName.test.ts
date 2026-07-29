@@ -6,6 +6,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert";
 import {
 	commandIdToToolName,
+	describeCommand,
 	getCombinedLength,
 	MAX_COMBINED_LENGTH,
 	MCP_SERVER_NAME,
@@ -65,5 +66,47 @@ describe("toolName", () => {
 			commandIdToToolName("1c-platform-tools.Configuration.loadFromSrc"),
 			"Cfg_loadFromSrc"
 		);
+	});
+});
+
+describe("describeCommand", () => {
+	it("заголовок и категория попадают в описание", () => {
+		const text = describeCommand({
+			id: "1c-platform-tools.test.runAll",
+			title: "Запустить все тесты",
+			category: "1C: Тестирование",
+		});
+		assert.match(text, /1C: Тестирование: Запустить все тесты/);
+		assert.match(text, /1c-platform-tools\.test\.runAll/);
+	});
+
+	it("без категории описание остаётся осмысленным", () => {
+		const text = describeCommand({ id: "1c-platform-tools.env.status", title: "Состояние окружения" });
+		assert.match(text, /^Состояние окружения\./);
+	});
+
+	it("без заголовка описание строится из идентификатора", () => {
+		const text = describeCommand({ id: "1c-platform-tools.env.status" });
+		assert.match(text, /1c-platform-tools\.env\.status/);
+	});
+});
+
+describe("describeCommand: команды интерфейса", () => {
+	it("команда без синхронного режима помечается в описании", () => {
+		const text = describeCommand({
+			id: "1c-platform-tools.run.designer",
+			title: "Запустить Конфигуратор",
+			supportsWait: false,
+		});
+		assert.match(text, /Исход операции не возвращается/);
+	});
+
+	it("обычная команда пометки не получает", () => {
+		const text = describeCommand({
+			id: "1c-platform-tools.test.runXUnit",
+			title: "Запустить тесты xUnit",
+			supportsWait: true,
+		});
+		assert.doesNotMatch(text, /Исход операции не возвращается/);
 	});
 });

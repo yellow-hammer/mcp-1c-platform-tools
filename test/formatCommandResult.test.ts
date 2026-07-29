@@ -3,7 +3,7 @@
  */
 import { describe, it } from "node:test";
 import assert from "node:assert";
-import { formatCommandResult } from "../src/formatCommandResult.js";
+import { formatCommandResult, clampOutput, isFailedResult } from "../src/formatCommandResult.js";
 
 describe("formatCommandResult", () => {
 	it("null/undefined → сообщение о UI-режиме с подсказкой wait: true", () => {
@@ -173,5 +173,66 @@ describe("formatCommandResult", () => {
 			},
 		});
 		assert.match(text, /Тесты пройдены: 5 из 5/);
+	});
+});
+
+describe("clampOutput", () => {
+	it("короткий вывод не меняется", () => {
+		assert.strictEqual(clampOutput("две строки\nтекста"), "две строки\nтекста");
+	});
+
+	it("длинный вывод обрезается с начала, хвост сохраняется", () => {
+		const text = `${"строка лога\n".repeat(4000)}последняя строка`;
+		const clamped = clampOutput(text);
+
+		assert.ok(clamped.length < text.length, "вывод должен стать короче");
+		assert.ok(clamped.endsWith("последняя строка"), "хвост вывода сохраняется");
+		assert.match(clamped, /^\[начало вывода пропущено: \d+ символов\]/);
+	});
+
+	it("длинный stdout в ответе инструмента обрезан", () => {
+		const text = formatCommandResult({
+			success: true,
+			exitCode: 0,
+			stdout: "x".repeat(50_000),
+		});
+		assert.ok(text.length < 20_000, `ожидался обрезанный вывод, длина ${text.length}`);
+		assert.match(text, /начало вывода пропущено/);
+	});
+});
+
+describe("isFailedResult", () => {
+	it("неструктурированный результат не считается провалом", () => {
+		assert.strictEqual(isFailedResult(null), false);
+		assert.strictEqual(isFailedResult("готово"), false);
+	});
+
+	it("success: false — провал, success: true — нет", () => {
+		assert.strictEqual(isFailedResult({ success: false, exitCode: 1 }), true);
+		assert.strictEqual(isFailedResult({ success: true, exitCode: 0 }), false);
+	});
+
+	it("упавшие тесты — провал даже при нулевом коде возврата", () => {
+		const result = {
+			success: true,
+			exitCode: 0,
+			tests: {
+				total: 3, passed: 1, failed: 2, errors: 0, skipped: 0,
+				reportPath: "build/out/junit", failedTests: ["Тест"],
+			},
+		};
+		assert.strictEqual(isFailedResult(result), true);
+	});
+
+	it("пустой отчёт — провал: тестов не было", () => {
+		const result = {
+			success: true,
+			exitCode: 0,
+			tests: {
+				total: 0, passed: 0, failed: 0, errors: 0, skipped: 0,
+				reportPath: "build/out/junit", failedTests: [],
+			},
+		};
+		assert.strictEqual(isFailedResult(result), true);
 	});
 });

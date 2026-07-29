@@ -55,6 +55,8 @@ export interface TestRunStats {
 export interface StructuredSyntaxError {
 	/** Путь к файлу с ошибкой. */
 	filepath: string;
+	/** Путь по метаданным из отчёта (ОбщийМодуль.Имя.Модуль). */
+	metadataPath?: string;
 	/** Номер строки (если доступен). */
 	line?: number;
 	/** Номер столбца (если доступен). */
@@ -65,6 +67,30 @@ export interface StructuredSyntaxError {
 	message: string;
 	/** Режим проверки (ThinClient, Server, …). */
 	mode?: string;
+}
+
+/**
+ * Предел вывода процесса в ответе инструмента (символов на поток).
+ * Лог сборки или прогона тестов доходит до сотен килобайт: целиком он вытесняет
+ * из контекста агента всё остальное, а нужен из него хвост с ошибкой.
+ */
+const OUTPUT_LIMIT = 12_000;
+
+/**
+ * Обрезает длинный вывод процесса, оставляя хвост.
+ *
+ * @param text — вывод процесса
+ * @returns вывод не длиннее предела, с пометкой об обрезке
+ */
+export function clampOutput(text: string): string {
+	if (text.length <= OUTPUT_LIMIT) {
+		return text;
+	}
+	const dropped = text.length - OUTPUT_LIMIT;
+	const tail = text.slice(-OUTPUT_LIMIT);
+	const fromLineBreak = tail.indexOf("\n");
+	const aligned = fromLineBreak === -1 ? tail : tail.slice(fromLineBreak + 1);
+	return `[начало вывода пропущено: ${dropped} символов]\n${aligned}`;
 }
 
 /**
@@ -124,12 +150,12 @@ function formatStructured(r: StructuredCommandResult): string {
 
 	const stdout = r.stdout?.trim();
 	if (stdout) {
-		lines.push(`\nВывод:\n${stdout}`);
+		lines.push(`\nВывод:\n${clampOutput(stdout)}`);
 	}
 
 	const stderr = r.stderr?.trim();
 	if (stderr) {
-		lines.push(`\nСтандартный вывод ошибок:\n${stderr}`);
+		lines.push(`\nСтандартный вывод ошибок:\n${clampOutput(stderr)}`);
 	}
 
 	if (r.errors && r.errors.length > 0) {
@@ -144,6 +170,29 @@ function formatStructured(r: StructuredCommandResult): string {
 	}
 
 	return lines.join("\n");
+}
+
+/**
+ * Определяет, закончилась ли команда неудачей.
+ *
+ * Ответ с таким признаком помечается isError, иначе клиент считает провал
+ * обычным ответом: «Тесты не пройдены» ничем не отличается от «Успех».
+ *
+ * @param result — значение, возвращённое executeCommand
+ * @returns true, если команда или прогон тестов завершились неудачей
+ */
+export function isFailedResult(result: unknown): boolean {
+	if (!isStructuredResult(result)) {
+		return false;
+	}
+	if (result.errors && result.errors.length > 0) {
+		return true;
+	}
+	if (result.tests) {
+		const t = result.tests;
+		return t.failed > 0 || t.errors > 0 || t.total === 0;
+	}
+	return !result.success;
 }
 
 /**
@@ -163,7 +212,7 @@ export function formatCommandResult(result: unknown): string {
 	}
 
 	if (typeof result === "string") {
-		return result.trim() === "" ? "Выполнено." : result.trim();
+		return result.trim() === "" ? "Выполнено." : clampOutput(result.trim());
 	}
 
 	if (isStructuredResult(result)) {

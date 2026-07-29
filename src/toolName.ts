@@ -1,3 +1,5 @@
+import type { CommandDescriptor } from "./ipcClient.js";
+
 /**
  * Формирование имён MCP-инструментов из commandId с учётом лимита длины (60 символов).
  * См. .cursor/rules/naming-abbreviations.mdc
@@ -66,4 +68,28 @@ export function commandIdToToolName(commandId: string): string {
  */
 export function getCombinedLength(toolName: string): number {
 	return MCP_SERVER_NAME.length + 2 + toolName.length;
+}
+
+/**
+ * Строит описание инструмента из заголовка команды расширения.
+ *
+ * Без описания агент выбирает инструмент по одному имени и промахивается:
+ * заголовок и категория из package.json объясняют, что команда делает.
+ *
+ * @param descriptor — команда с заголовком и категорией
+ * @returns описание для схемы инструмента
+ */
+export function describeCommand(descriptor: CommandDescriptor): string {
+	const title = descriptor.title?.trim();
+	const category = descriptor.category?.trim();
+	// Команды, открывающие окна VS Code, исход операции не возвращают: без
+	// пометки агент ждёт от них результата и считает вызов неудачным
+	const uiOnly = descriptor.supportsWait === false
+		? " Исход операции не возвращается: ответ подтверждает только запуск."
+		: "";
+	if (!title) {
+		return `Команда расширения 1C: Platform Tools (${descriptor.id}).${uiOnly}`;
+	}
+	const scope = category ? `${category}: ` : "";
+	return `${scope}${title}. Команда расширения ${descriptor.id}.${uiOnly}`;
 }

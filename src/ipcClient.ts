@@ -6,6 +6,45 @@ import * as net from "node:net";
 import { randomUUID } from "node:crypto";
 import { logger } from "./loggerServer.js";
 
+/** Команда расширения с заголовком: из неё строится описание инструмента. */
+export interface CommandDescriptor {
+	/** Идентификатор команды (1c-platform-tools.test.runAll). */
+	id: string;
+	/** Заголовок команды из package.json расширения. */
+	title?: string;
+	/** Категория команды из package.json расширения. */
+	category?: string;
+	/** Команда выполняется синхронно и возвращает результат. */
+	supportsWait?: boolean;
+}
+
+/** Предел длины подробностей ошибки в сообщении (символов). */
+const DETAILS_LIMIT = 500;
+
+/**
+ * Дополняет сообщение об ошибке подробностями от расширения.
+ *
+ * Расширение сообщает, например, какие каталоги открыты в VS Code при
+ * несовпадении projectPath: без этого агент не знает, что исправить.
+ *
+ * @param details — поле details из ответа IPC
+ * @returns строка для добавления к сообщению (пустая, если подробностей нет)
+ */
+function formatErrorDetails(details: unknown): string {
+	if (details === undefined || details === null) {
+		return "";
+	}
+	try {
+		const text = JSON.stringify(details);
+		if (!text || text === "{}" || text === "[]") {
+			return "";
+		}
+		return `. Подробности: ${text.length > DETAILS_LIMIT ? `${text.slice(0, DETAILS_LIMIT)}…` : text}`;
+	} catch {
+		return "";
+	}
+}
+
 /** Настройки подключения к IPC-серверу (хост, порт, токен, таймаут). */
 export interface IpcClientConfig {
 	host: string;
@@ -183,10 +222,9 @@ export class IpcClient {
 					const msg =
 						response.error.message || "Неизвестная ошибка IPC-сервера";
 					const code = response.error.code;
+					const details = formatErrorDetails(response.error.details);
 					const fullMessage =
-						code && code !== ""
-							? `${msg} (код: ${code})`
-							: msg;
+						(code && code !== "" ? `${msg} (код: ${code})` : msg) + details;
 					logger.error(`IPC: ошибка сервера — ${fullMessage}`);
 					reject(new Error(fullMessage));
 					return;
@@ -247,5 +285,24 @@ export class IpcClient {
 	public async listCommands(): Promise<string[]> {
 		const res = await this.request<{ commands?: string[] }>("listCommands");
 		return res?.commands ?? [];
+	}
+
+	/**
+	 * Запрашивает список команд с заголовками для описаний инструментов.
+	 *
+	 * Расширения прошлых версий отдают только идентификаторы: тогда описание
+	 * инструмента строится из одного идентификатора.
+	 *
+	 * @returns описания команд (id, заголовок, категория)
+	 */
+	public async listCommandDescriptors(): Promise<CommandDescriptor[]> {
+		const res = await this.request<{
+			commands?: string[];
+			descriptors?: CommandDescriptor[];
+		}>("listCommands");
+		if (res?.descriptors && res.descriptors.length > 0) {
+			return res.descriptors;
+		}
+		return (res?.commands ?? []).map((id) => ({ id }));
 	}
 }

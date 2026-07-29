@@ -5,10 +5,10 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { IpcClient } from "./ipcClient.js";
-import { formatCommandResult } from "./formatCommandResult.js";
+import { IpcClient, CommandDescriptor } from "./ipcClient.js";
+import { formatCommandResult, isFailedResult } from "./formatCommandResult.js";
 import { logger } from "./loggerServer.js";
-import { commandIdToToolName } from "./toolName.js";
+import { commandIdToToolName, describeCommand } from "./toolName.js";
 
 /**
  * Таймаут IPC для команд без ожидания (мс).
@@ -18,9 +18,22 @@ const TIMEOUT_DEFAULT_MS = 60_000;
 
 /**
  * Таймаут IPC для команд с wait: true (мс).
- * Команды выполняются синхронно; сборка/проверка могут занимать несколько минут.
+ *
+ * Команды выполняются синхронно; полный прогон тестов или сборка большой
+ * конфигурации идут дольше нескольких минут, поэтому предел поднимается
+ * переменной окружения MCP_1C_WAIT_TIMEOUT_MS.
  */
-const TIMEOUT_WAIT_MS = 300_000;
+const TIMEOUT_WAIT_MS = readWaitTimeout();
+
+/**
+ * Читает таймаут синхронных команд из MCP_1C_WAIT_TIMEOUT_MS.
+ *
+ * @returns таймаут в миллисекундах (по умолчанию 30 минут)
+ */
+function readWaitTimeout(): number {
+	const raw = Number.parseInt(process.env.MCP_1C_WAIT_TIMEOUT_MS ?? "", 10);
+	return Number.isFinite(raw) && raw > 0 ? raw : 1_800_000;
+}
 
 /**
  * Схема параметров инструментов.
@@ -121,7 +134,7 @@ async function runTool(
 	ipcClient: IpcClient,
 	commandId: string,
 	params: BaseParams
-): Promise<{ content: Array<{ type: "text"; text: string }> }> {
+): Promise<{ content: Array<{ type: "text"; text: string }>; isError?: boolean }> {
 	const wait = params.wait ?? true;
 	const timeoutMs = wait ? TIMEOUT_WAIT_MS : TIMEOUT_DEFAULT_MS;
 
@@ -144,7 +157,10 @@ async function runTool(
 			timeoutMs
 		);
 		const text = formatCommandResult(result);
-		return { content: [{ type: "text", text }] };
+		const failed = isFailedResult(result);
+		return failed
+			? { content: [{ type: "text", text }], isError: true }
+			: { content: [{ type: "text", text }] };
 	} catch (err) {
 		const message = err instanceof Error ? err.message : String(err);
 		logger.error(`runTool ${commandId}: ${message}`);
@@ -155,6 +171,7 @@ async function runTool(
 					text: `Не удалось выполнить команду: ${message}`,
 				},
 			],
+			isError: true,
 		};
 	}
 }
@@ -181,44 +198,95 @@ async function main(): Promise<void> {
 		},
 		{
 			capabilities: {
-				tools: {},
+				tools: { listChanged: true },
 			},
 		}
 	);
 
 	const ipcClient = new IpcClient();
+	const registered = new Set<string>();
 
-	let commandIds: string[] = [];
+	/**
+	 * Регистрирует инструменты для команд, которых ещё нет.
+	 *
+	 * @param descriptors — команды расширения с заголовками
+	 * @returns количество добавленных инструментов
+	 */
+	const registerTools = (descriptors: CommandDescriptor[]): number => {
+		let added = 0;
+		for (const descriptor of descriptors) {
+			if (registered.has(descriptor.id)) {
+				continue;
+			}
+			registered.add(descriptor.id);
+			server.registerTool(
+				commandIdToToolName(descriptor.id),
+				{ description: describeCommand(descriptor), inputSchema: baseParamsShape },
+				async (input) => runTool(ipcClient, descriptor.id, input as BaseParams)
+			);
+			added += 1;
+		}
+		return added;
+	};
+
+	let descriptors: CommandDescriptor[] = [];
 	try {
-		commandIds = await ipcClient.listCommands();
+		descriptors = await ipcClient.listCommandDescriptors();
 	} catch (err) {
 		const message = err instanceof Error ? err.message : String(err);
-		logger.warn(`Не удалось получить список команд по IPC: ${message}. Включите расширение 1c-platform-tools и настройку 1c-platform-tools.ipc.enabled.`);
-		server.registerTool(
+		logger.warn(
+			`Не удалось получить список команд по IPC: ${message}. ` +
+			"Включите расширение 1c-platform-tools и настройку 1c-platform-tools.ipc.enabled."
+		);
+
+		// Список команд запрашивается один раз при запуске: если VS Code ещё не
+		// открыт, инструментов не будет до перезапуска сервера. Заглушка
+		// повторяет попытку и регистрирует инструменты, когда расширение
+		// отозвалось; клиент узнаёт о них по notifications/tools/list_changed
+		const placeholder = server.registerTool(
 			"onec_platform_tools_status",
-			{ inputSchema: { message: z.string().optional().describe("Не используется") } },
-			async () => ({
-				content: [
-					{
-						type: "text" as const,
-						text: "Расширение 1c-platform-tools недоступно по IPC. Откройте VS Code с проектом 1С и включите настройку 1c-platform-tools.ipc.enabled.",
-					},
-				],
-			})
+			{
+				description:
+					"Состояние подключения к расширению 1C: Platform Tools. " +
+					"Вызовите, если инструментов 1С не видно: сервер повторит подключение.",
+			},
+			async () => {
+				try {
+					const late = await ipcClient.listCommandDescriptors();
+					const added = registerTools(late);
+					if (added > 0) {
+						placeholder.remove();
+						logger.info(`MCP-сервер: зарегистрировано ${added} инструментов после повторного подключения`);
+						return {
+							content: [
+								{
+									type: "text" as const,
+									text: `Расширение отозвалось, доступно инструментов: ${added}. Повторите вызов нужного инструмента.`,
+								},
+							],
+						};
+					}
+				} catch (retryError) {
+					const retryMessage =
+						retryError instanceof Error ? retryError.message : String(retryError);
+					logger.warn(`Повторное подключение по IPC не удалось: ${retryMessage}`);
+				}
+				return {
+					content: [
+						{
+							type: "text" as const,
+							text: "Расширение 1c-platform-tools недоступно по IPC. Откройте VS Code с проектом 1С и включите настройку 1c-platform-tools.ipc.enabled.",
+						},
+					],
+					isError: true,
+				};
+			}
 		);
 	}
 
-	for (const commandId of commandIds) {
-		const toolName = commandIdToToolName(commandId);
-		server.registerTool(
-			toolName,
-			{ inputSchema: baseParamsShape },
-			async (input) => runTool(ipcClient, commandId, input as BaseParams)
-		);
-	}
-
-	if (commandIds.length > 0) {
-		logger.info(`MCP-сервер: зарегистрировано ${commandIds.length} инструментов`);
+	const count = registerTools(descriptors);
+	if (count > 0) {
+		logger.info(`MCP-сервер: зарегистрировано ${count} инструментов`);
 	}
 
 	const transport = new StdioServerTransport();
