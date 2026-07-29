@@ -247,14 +247,15 @@ export class IpcClient {
 	 *
 	 * @param commandId — идентификатор команды (например 1c-platform-tools.configuration.loadFromSrc)
 	 * @param args — аргументы команды; первым элементом рекомендуется передавать объект с флагами (wait, settingsFile и т.д.)
-	 * @param projectPath — абсолютный путь к корню проекта 1С
+	 * @param projectPath — корень проекта 1С; без него расширение работает
+	 *   с открытой папкой VS Code
 	 * @param timeoutMs — таймаут ожидания; при wait: true рекомендуется 300 000 мс
 	 * @returns commandResult от сервера; при ok === false выбрасывает Error
 	 */
 	public async executeCommand(
 		commandId: string,
 		args: unknown[] | undefined,
-		projectPath: string,
+		projectPath: string | undefined,
 		timeoutMs?: number
 	): Promise<unknown> {
 		const result = await this.request<{

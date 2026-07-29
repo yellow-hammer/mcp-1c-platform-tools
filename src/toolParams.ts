@@ -11,8 +11,11 @@ import { z } from "zod";
 const commonShape = {
 	projectPath: z
 		.string()
-		.min(1, "projectPath не должен быть пустым")
-		.describe("Абсолютный путь к корню проекта 1С (где лежит packagedef/env.json)"),
+		.optional()
+		.describe(
+			"Корень проекта 1С: каталог с packagedef или env.json. " +
+			"Можно не передавать, если в VS Code открыт один проект"
+		),
 	wait: z
 		.boolean()
 		.optional()
