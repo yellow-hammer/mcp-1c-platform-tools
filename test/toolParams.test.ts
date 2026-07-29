@@ -40,7 +40,7 @@ describe("paramsForCommand", () => {
 	});
 
 	it("настройка тестов получает frameworks", () => {
-		assert.ok(keys("1c-platform-tools.testing.configure").includes("frameworks"));
+		assert.ok(keys("1c-platform-tools.test.configure").includes("frameworks"));
 	});
 
 	it("команды расширений конфигурации получают extensions", () => {
@@ -49,7 +49,7 @@ describe("paramsForCommand", () => {
 	});
 
 	it("запуск обработки в Предприятии получает execute и command", () => {
-		const shape = keys("1c-platform-tools.enterprise.run");
+		const shape = keys("1c-platform-tools.externalProcessors.run");
 		assert.ok(shape.includes("execute"));
 		assert.ok(shape.includes("command"));
 	});

@@ -141,10 +141,10 @@ export function paramsForCommand(commandId: string): ToolParamsShape {
 	if (commandId === "1c-platform-tools.env.selectProfile") {
 		Object.assign(shape, profileShape);
 	}
-	if (commandId === "1c-platform-tools.testing.configure") {
+	if (commandId === "1c-platform-tools.test.configure") {
 		Object.assign(shape, frameworksShape);
 	}
-	if (commandId === "1c-platform-tools.enterprise.run") {
+	if (commandId === "1c-platform-tools.externalProcessors.run") {
 		Object.assign(shape, enterpriseShape);
 	}
 

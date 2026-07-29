@@ -11,8 +11,8 @@
 | `sha` | SHA коммита для `configuration_loadIncFromSrc`; пустая строка — полная загрузка |
 | `extensions` | Явный список имён расширений для `extensions_*`; без него — сохранённый выбор проекта |
 | `profile` | Имя env-профиля для `env_selectProfile` (id, имя файла или подпись) |
-| `frameworks` | Включаемые тестовые фреймворки для `testing_configure` (vanessa, xunit, yaxunit, onescript, onebdd) |
-| `execute`, `command` | Путь к EPF/ERF и строка `/C` для `enterprise_run` |
+| `frameworks` | Включаемые тестовые фреймворки для `test_configure` (vanessa, xunit, yaxunit, onescript, onebdd) |
+| `execute`, `command` | Путь к EPF/ERF и строка `/C` для `externalProcs_run` |
 | `wait` | Ждать завершения и вернуть `{ success, exitCode, stdout, stderr, tests, artifact, durationMs }`. По умолчанию `true`: без ожидания исход операции неизвестен. `false` — команда уходит в UI-терминал, управление возвращается сразу |
 
 Синхронный вызов ждёт до 30 минут; предел меняется переменной окружения `MCP_1C_WAIT_TIMEOUT_MS` в конфиге MCP. У самого агента бывает свой предел ожидания: если он обрывает долгую операцию, запускайте её с `wait: false` и смотрите ход выполнения в терминале VS Code.
