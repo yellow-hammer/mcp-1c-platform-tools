@@ -114,20 +114,51 @@ const sessionShape = {
 		.describe("Время окончания блокировки (только vanessa-runner 2.x)"),
 } as const;
 
-/** Завершение сеансов: отбор и режим отбора. */
-const sessionKillShape = {
+/** Отбор сеансов: общий для завершения, проверки отсутствия и списка. */
+const sessionFilterShape = {
 	sessionFilter: z
 		.string()
 		.optional()
-		.describe("Отбор сеансов, например appid=Designer|name=Администратор (только vanessa-runner 2.x)"),
+		.describe("Отбор сеансов, например appid=Designer|name=Администратор; значения через точку с запятой"),
 	sessionFilterMode: z
 		.string()
 		.optional()
-		.describe("Режим отбора: ONLY, OFF, EXCEPT, DEFAULT, ALL (только vanessa-runner 2.x)"),
+		.describe("Режим отбора: ONLY, OFF, EXCEPT; DEFAULT и ALL - только vanessa-runner 2.x"),
+} as const;
+
+/** Завершение сеансов: блокировка и ожидание завершения. */
+const sessionKillShape = {
+	...sessionFilterShape,
 	keepSessionsUnlocked: z
 		.boolean()
 		.optional()
 		.describe("Не запрещать начало новых сеансов при их завершении"),
+	sessionRetry: z
+		.number()
+		.optional()
+		.describe("Число попыток добить зависшие сеансы, по умолчанию 3 (только vanessa-runner 3.x)"),
+	sessionTimeout: z
+		.number()
+		.optional()
+		.describe("Ожидание завершения сеансов в секундах; при нём число попыток не используется (только vanessa-runner 3.x)"),
+} as const;
+
+/** Проверка отсутствия сеансов: отбор и ожидание. */
+const sessionClosedShape = {
+	...sessionFilterShape,
+	sessionTimeout: z
+		.number()
+		.optional()
+		.describe("Ждать освобождения базы столько секунд, проверяя каждые 3 секунды (только vanessa-runner 3.x)"),
+} as const;
+
+/** Список сеансов: отбор и вывод соединений. */
+const sessionListShape = {
+	...sessionFilterShape,
+	sessionConnections: z
+		.boolean()
+		.optional()
+		.describe("Дополнительно показать соединения информационной базы, включая зависшие без сеанса"),
 } as const;
 
 /** Запуск цепочки шагов из .1cpt/pipelines.json. */
@@ -203,11 +234,14 @@ export function paramsForCommand(commandId: string): ToolParamsShape {
 	if (commandId.startsWith("1c-platform-tools.session.")) {
 		Object.assign(shape, sessionShape);
 	}
-	if (
-		commandId === "1c-platform-tools.session.kill" ||
-		commandId === "1c-platform-tools.session.checkClosed"
-	) {
+	if (commandId === "1c-platform-tools.session.kill") {
 		Object.assign(shape, sessionKillShape);
+	}
+	if (commandId === "1c-platform-tools.session.checkClosed") {
+		Object.assign(shape, sessionClosedShape);
+	}
+	if (commandId === "1c-platform-tools.session.list") {
+		Object.assign(shape, sessionListShape);
 	}
 	if (commandId === "1c-platform-tools.pipelines.run") {
 		Object.assign(shape, pipelineShape);
