@@ -225,10 +225,7 @@ export function paramsForCommand(commandId: string): ToolParamsShape {
 	if (commandId === "1c-platform-tools.test.configure") {
 		Object.assign(shape, frameworksShape);
 	}
-	if (
-		commandId === "1c-platform-tools.externalProcessors.run" ||
-		commandId === "1c-platform-tools.run.enterprise"
-	) {
+	if (commandId === "1c-platform-tools.run.enterprise") {
 		Object.assign(shape, enterpriseShape);
 	}
 	if (commandId.startsWith("1c-platform-tools.session.")) {
