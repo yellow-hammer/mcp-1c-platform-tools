@@ -48,8 +48,8 @@ describe("paramsForCommand", () => {
 		assert.ok(!keys("1c-platform-tools.build.cf").includes("extensions"));
 	});
 
-	it("запуск обработки в Предприятии получает execute и command", () => {
-		const shape = keys("1c-platform-tools.externalProcessors.run");
+	it("запуск Предприятия получает execute и command: ими открывают обработку", () => {
+		const shape = keys("1c-platform-tools.run.enterprise");
 		assert.ok(shape.includes("execute"));
 		assert.ok(shape.includes("command"));
 	});
