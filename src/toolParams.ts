@@ -94,6 +94,52 @@ const enterpriseShape = {
 		.describe("Строка параметров запуска /C для внешней обработки"),
 } as const;
 
+/** Управление сеансами: параметры разового вызова, подключение берётся из профиля. */
+const sessionShape = {
+	lockMessage: z
+		.string()
+		.optional()
+		.describe("Сообщение пользователю при попытке начать сеанс в заблокированной базе"),
+	accessCode: z
+		.string()
+		.optional()
+		.describe("Код допуска: с ним можно войти в базу, где начало сеансов запрещено"),
+	lockStart: z
+		.string()
+		.optional()
+		.describe("Время начала блокировки, например 2040-12-31T23:59:59 (только vanessa-runner 2.x)"),
+	lockEnd: z
+		.string()
+		.optional()
+		.describe("Время окончания блокировки (только vanessa-runner 2.x)"),
+} as const;
+
+/** Завершение сеансов: отбор и режим отбора. */
+const sessionKillShape = {
+	sessionFilter: z
+		.string()
+		.optional()
+		.describe("Отбор сеансов, например appid=Designer|name=Администратор (только vanessa-runner 2.x)"),
+	sessionFilterMode: z
+		.string()
+		.optional()
+		.describe("Режим отбора: ONLY, OFF, EXCEPT, DEFAULT, ALL (только vanessa-runner 2.x)"),
+	keepSessionsUnlocked: z
+		.boolean()
+		.optional()
+		.describe("Не запрещать начало новых сеансов при их завершении"),
+} as const;
+
+/** Запуск цепочки шагов из .1cpt/pipelines.json. */
+const pipelineShape = {
+	pipeline: z
+		.string()
+		.describe(
+			"Идентификатор или название цепочки из .1cpt/pipelines.json. " +
+			"Без него команда не выполняется: выбирать цепочку за пользователя нельзя"
+		),
+} as const;
+
 /** Команды, которым не нужны настройки vanessa-runner. */
 const WITHOUT_SETTINGS = [
 	"1c-platform-tools.env.",
@@ -102,6 +148,7 @@ const WITHOUT_SETTINGS = [
 	"1c-platform-tools.dependencies.",
 	"1c-platform-tools.oscript.",
 	"1c-platform-tools.components.",
+	"1c-platform-tools.pipelines.",
 ];
 
 /** Команды, которым нужны каталоги проекта. */
@@ -147,8 +194,23 @@ export function paramsForCommand(commandId: string): ToolParamsShape {
 	if (commandId === "1c-platform-tools.test.configure") {
 		Object.assign(shape, frameworksShape);
 	}
-	if (commandId === "1c-platform-tools.externalProcessors.run") {
+	if (
+		commandId === "1c-platform-tools.externalProcessors.run" ||
+		commandId === "1c-platform-tools.run.enterprise"
+	) {
 		Object.assign(shape, enterpriseShape);
+	}
+	if (commandId.startsWith("1c-platform-tools.session.")) {
+		Object.assign(shape, sessionShape);
+	}
+	if (
+		commandId === "1c-platform-tools.session.kill" ||
+		commandId === "1c-platform-tools.session.checkClosed"
+	) {
+		Object.assign(shape, sessionKillShape);
+	}
+	if (commandId === "1c-platform-tools.pipelines.run") {
+		Object.assign(shape, pipelineShape);
 	}
 
 	return shape;
