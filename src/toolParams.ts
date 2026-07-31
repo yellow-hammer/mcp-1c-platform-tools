@@ -39,20 +39,6 @@ const settingsShape = {
 		.describe("Явная строка подключения к ИБ. Если не задана, берётся из настроек проекта"),
 } as const;
 
-/** Переопределение каталогов проекта: команды, работающие с исходниками и сборкой. */
-const pathsShape = {
-	pathsOverride: z
-		.object({
-			cf: z.string().optional(),
-			out: z.string().optional(),
-			cfe: z.string().optional(),
-			epf: z.string().optional(),
-			erf: z.string().optional(),
-		})
-		.optional()
-		.describe("Переопределение каталогов src/cf, build/out, src/cfe, src/epf, src/erf относительно projectPath"),
-} as const;
-
 const shaShape = {
 	sha: z
 		.string()
@@ -183,17 +169,6 @@ const WITHOUT_SETTINGS = [
 ];
 
 /** Команды, которым нужны каталоги проекта. */
-const WITH_PATHS = [
-	"1c-platform-tools.configuration.",
-	"1c-platform-tools.build.",
-	"1c-platform-tools.decompile.",
-	"1c-platform-tools.extensions.",
-	"1c-platform-tools.externalProcessors.",
-	"1c-platform-tools.externalReports.",
-	"1c-platform-tools.externalFiles.",
-	"1c-platform-tools.test.",
-	"1c-platform-tools.infobase.",
-];
 
 /** Схема параметров инструмента: общие поля плюс применимые к команде. */
 export type ToolParamsShape = Record<string, z.ZodTypeAny>;
@@ -209,9 +184,6 @@ export function paramsForCommand(commandId: string): ToolParamsShape {
 
 	if (!WITHOUT_SETTINGS.some((prefix) => commandId.startsWith(prefix))) {
 		Object.assign(shape, settingsShape);
-	}
-	if (WITH_PATHS.some((prefix) => commandId.startsWith(prefix))) {
-		Object.assign(shape, pathsShape);
 	}
 	if (commandId === "1c-platform-tools.configuration.loadIncrementFromSrc") {
 		Object.assign(shape, shaShape);

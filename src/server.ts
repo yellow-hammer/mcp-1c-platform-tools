@@ -48,7 +48,6 @@ export interface ToolParams {
 	wait?: boolean;
 	settingsFile?: string;
 	ibConnection?: string;
-	pathsOverride?: Record<string, string | undefined>;
 	sha?: string;
 	extensions?: string[];
 	profile?: string;
@@ -103,7 +102,6 @@ export async function runTool(
 				wait,
 				settingsFile: params.settingsFile,
 				ibConnection: params.ibConnection,
-				pathsOverride: params.pathsOverride,
 				sha: params.sha,
 				extensions: params.extensions,
 				profile: params.profile,

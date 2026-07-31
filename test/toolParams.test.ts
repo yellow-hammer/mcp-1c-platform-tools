@@ -54,11 +54,6 @@ describe("paramsForCommand", () => {
 		assert.ok(shape.includes("command"));
 	});
 
-	it("каталоги проекта переопределяются там, где идёт работа с исходниками", () => {
-		assert.ok(keys("1c-platform-tools.configuration.loadFromSrc").includes("pathsOverride"));
-		assert.ok(!keys("1c-platform-tools.env.selectProfile").includes("pathsOverride"));
-	});
-
 	it("схема заметно короче прежней общей", () => {
 		assert.ok(keys("1c-platform-tools.env.selectProfile").length <= 3);
 	});
