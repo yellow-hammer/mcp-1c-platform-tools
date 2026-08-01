@@ -45,11 +45,19 @@ const shaShape = {
 		.describe("SHA коммита для инкрементальной загрузки. Пустая строка — полная загрузка"),
 } as const;
 
+/** Команды тестовых расширений: отбор такой же, как у расширений решения. */
+const TEST_EXTENSION_COMMANDS = [
+	"1c-platform-tools.test.loadExtensions",
+	"1c-platform-tools.test.buildExtensions",
+	"1c-platform-tools.test.dumpExtensions",
+	"1c-platform-tools.test.decompileExtensions",
+];
+
 const extensionsShape = {
 	extensions: z
 		.array(z.string())
 		.optional()
-		.describe("Имена расширений конфигурации. Без параметра берётся сохранённый выбор проекта"),
+		.describe("Имена расширений: каталоги в исходниках расширений, а для команд тестовых расширений - в их каталоге. Без параметра берётся сохранённый выбор проекта"),
 } as const;
 
 const profileShape = {
@@ -188,7 +196,10 @@ export function paramsForCommand(commandId: string): ToolParamsShape {
 	if (commandId === "1c-platform-tools.configuration.loadIncrementFromSrc") {
 		Object.assign(shape, shaShape);
 	}
-	if (commandId.startsWith("1c-platform-tools.extensions.")) {
+	if (
+		commandId.startsWith("1c-platform-tools.extensions.") ||
+		TEST_EXTENSION_COMMANDS.includes(commandId)
+	) {
 		Object.assign(shape, extensionsShape);
 	}
 	if (commandId === "1c-platform-tools.env.selectProfile") {

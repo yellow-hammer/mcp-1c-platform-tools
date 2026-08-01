@@ -9,7 +9,7 @@
 | `ibConnection` | Явная строка подключения к ИБ. Без неё берётся значение из файла настроек, иначе `/F./build/ib` |
 | `pathsOverride` | Переопределение стандартных каталогов проекта (см. ниже) |
 | `sha` | SHA коммита для `configuration_loadIncFromSrc`; пустая строка — полная загрузка |
-| `extensions` | Явный список имён расширений для `extensions_*`; без него — сохранённый выбор проекта |
+| `extensions` | Явный список имён расширений для `extensions_*` и тестовых `test_*Exts`; без него — сохранённый выбор проекта |
 | `profile` | Имя env-профиля для `env_selectProfile` (id, имя файла или подпись) |
 | `frameworks` | Включаемые тестовые фреймворки для `test_configure` (vanessa, xunit, yaxunit, onescript, onebdd) |
 | `execute`, `command` | Путь к EPF/ERF и строка `/C` для `externalProcs_run` |

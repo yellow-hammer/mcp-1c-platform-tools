@@ -43,6 +43,12 @@ describe("paramsForCommand", () => {
 		assert.ok(keys("1c-platform-tools.test.configure").includes("frameworks"));
 	});
 
+	it("командам тестовых расширений тоже доступен отбор", () => {
+		assert.ok(keys("1c-platform-tools.test.loadExtensions").includes("extensions"));
+		assert.ok(keys("1c-platform-tools.test.buildExtensions").includes("extensions"));
+		assert.ok(!keys("1c-platform-tools.test.yaxunit").includes("extensions"));
+	});
+
 	it("команды расширений конфигурации получают extensions", () => {
 		assert.ok(keys("1c-platform-tools.extensions.build").includes("extensions"));
 		assert.ok(!keys("1c-platform-tools.build.cf").includes("extensions"));
