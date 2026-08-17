@@ -165,6 +165,25 @@ const pipelineShape = {
 		),
 } as const;
 
+/** Команды загрузки: применение загруженного к конфигурации БД задаётся вызовом. */
+const LOAD_COMMANDS = [
+	"1c-platform-tools.configuration.loadFromSrc",
+	"1c-platform-tools.configuration.loadFromCf",
+	"1c-platform-tools.configuration.loadFromFilesByList",
+	"1c-platform-tools.configuration.loadIncrementFromSrc",
+	"1c-platform-tools.extensions.loadFromSrc",
+];
+
+const updateDbShape = {
+	updateDb: z
+		.boolean()
+		.optional()
+		.describe(
+			"Обновить конфигурацию БД (UpdateDBCfg) тем же запуском после загрузки. " +
+			"Без параметра загрузка выполняется без обновления, если в настройках проекта не задано иное"
+		),
+} as const;
+
 /** Команды, которым не нужны настройки vanessa-runner. */
 const WITHOUT_SETTINGS = [
 	"1c-platform-tools.env.",
@@ -195,6 +214,9 @@ export function paramsForCommand(commandId: string): ToolParamsShape {
 	}
 	if (commandId === "1c-platform-tools.configuration.loadIncrementFromSrc") {
 		Object.assign(shape, shaShape);
+	}
+	if (LOAD_COMMANDS.includes(commandId)) {
+		Object.assign(shape, updateDbShape);
 	}
 	if (
 		commandId.startsWith("1c-platform-tools.extensions.") ||

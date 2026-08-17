@@ -158,6 +158,23 @@ describe("createMcpServer", () => {
 		await client.close();
 	});
 
+	it("до команды доходит каждый параметр из схемы инструмента", async () => {
+		// Схема принимала параметры сеансов, цепочек и обновления БД, а до расширения
+		// доходил только перечисленный вручную набор: агент задавал их вхолостую.
+		const gateway = new FakeGateway(DESCRIPTORS);
+		const client = await connect(gateway);
+
+		await client.callTool({
+			name: "configuration_loadIncFromSrc",
+			arguments: { projectPath: "C:/work/erp", sha: "", updateDb: true },
+		});
+
+		const flags = (gateway.calls[0].args?.[0] ?? {}) as Record<string, unknown>;
+		assert.strictEqual(flags.updateDb, true, "параметр команды должен доходить до расширения");
+		assert.ok(!('projectPath' in flags), "projectPath адресует проект, а не команду");
+		await client.close();
+	});
+
 	it("упавшие тесты помечают ответ как неуспешный", async () => {
 		const failing = {
 			success: true,
