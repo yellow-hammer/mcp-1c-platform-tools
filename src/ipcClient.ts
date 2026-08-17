@@ -245,7 +245,7 @@ export class IpcClient {
 	/**
 	 * Вызывает команду расширения в контексте указанного проекта.
 	 *
-	 * @param commandId — идентификатор команды (например 1c-platform-tools.configuration.loadFromSrc)
+	 * @param commandId — идентификатор команды (например 1c-platform-tools.cf.load)
 	 * @param args — аргументы команды; первым элементом рекомендуется передавать объект с флагами (wait, settingsFile и т.д.)
 	 * @param projectPath — корень проекта 1С; без него расширение работает
 	 *   с открытой папкой VS Code

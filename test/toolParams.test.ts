@@ -28,8 +28,8 @@ describe("paramsForCommand", () => {
 	});
 
 	it("инкрементальная загрузка получает sha", () => {
-		assert.ok(keys("1c-platform-tools.configuration.loadIncrementFromSrc").includes("sha"));
-		assert.ok(!keys("1c-platform-tools.configuration.loadFromSrc").includes("sha"));
+		assert.ok(keys("1c-platform-tools.cf.loadIncrement").includes("sha"));
+		assert.ok(!keys("1c-platform-tools.cf.load").includes("sha"));
 	});
 
 	it("выбор профиля получает profile и обходится без настроек прогона", () => {
@@ -50,7 +50,7 @@ describe("paramsForCommand", () => {
 	});
 
 	it("команды расширений конфигурации получают extensions", () => {
-		assert.ok(keys("1c-platform-tools.extensions.build").includes("extensions"));
+		assert.ok(keys("1c-platform-tools.cfe.compile").includes("extensions"));
 		assert.ok(!keys("1c-platform-tools.build.cf").includes("extensions"));
 	});
 

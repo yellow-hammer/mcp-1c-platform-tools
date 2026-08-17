@@ -167,11 +167,11 @@ const pipelineShape = {
 
 /** Команды загрузки: применение загруженного к конфигурации БД задаётся вызовом. */
 const LOAD_COMMANDS = [
-	"1c-platform-tools.configuration.loadFromSrc",
-	"1c-platform-tools.configuration.loadFromCf",
-	"1c-platform-tools.configuration.loadFromFilesByList",
-	"1c-platform-tools.configuration.loadIncrementFromSrc",
-	"1c-platform-tools.extensions.loadFromSrc",
+	"1c-platform-tools.cf.load",
+	"1c-platform-tools.cf.loadFile",
+	"1c-platform-tools.cf.loadByList",
+	"1c-platform-tools.cf.loadIncrement",
+	"1c-platform-tools.cfe.load",
 ];
 
 const updateDbShape = {
@@ -212,14 +212,14 @@ export function paramsForCommand(commandId: string): ToolParamsShape {
 	if (!WITHOUT_SETTINGS.some((prefix) => commandId.startsWith(prefix))) {
 		Object.assign(shape, settingsShape);
 	}
-	if (commandId === "1c-platform-tools.configuration.loadIncrementFromSrc") {
+	if (commandId === "1c-platform-tools.cf.loadIncrement") {
 		Object.assign(shape, shaShape);
 	}
 	if (LOAD_COMMANDS.includes(commandId)) {
 		Object.assign(shape, updateDbShape);
 	}
 	if (
-		commandId.startsWith("1c-platform-tools.extensions.") ||
+		commandId.startsWith("1c-platform-tools.cfe.") ||
 		TEST_EXTENSION_COMMANDS.includes(commandId)
 	) {
 		Object.assign(shape, extensionsShape);
