@@ -20,15 +20,15 @@ describe("toolName", () => {
 			"1c-platform-tools.artifacts.decompileConfiguration_fromEditor",
 			"1c-platform-tools.artifacts.decompileExtension_fromEditor",
 			"1c-platform-tools.artifacts.decompileProcessor_fromEditor",
-			"1c-platform-tools.configuration.loadIncrementFromSrc",
-			"1c-platform-tools.configuration.loadFromFilesByList",
-			"1c-platform-tools.configuration.dumpIncrementToSrc",
+			"1c-platform-tools.cf.loadIncrement",
+			"1c-platform-tools.cf.loadByList",
+			"1c-platform-tools.cf.dumpIncrement",
 			"1c-platform-tools.infobase.blockExternalResources",
-			"1c-platform-tools.configuration.loadFromSrc",
-			"1c-platform-tools.configuration.loadFromSrc.init",
-			"1c-platform-tools.extensions.dumpToCfe",
-			"1c-platform-tools.externalProcessors.decompile",
-			"1c-platform-tools.externalReports.decompile",
+			"1c-platform-tools.cf.load",
+			"1c-platform-tools.infobase.initFromSrc",
+			"1c-platform-tools.cfe.unload",
+			"1c-platform-tools.epf.decompileProcessor",
+			"1c-platform-tools.epf.decompileReport",
 		];
 
 		for (const commandId of commandIds) {
@@ -51,10 +51,10 @@ describe("toolName", () => {
 	});
 
 	it("commandId без префикса даёт тот же результат, что и с префиксом (префикс отрезается)", () => {
-		const withPrefix = commandIdToToolName("1c-platform-tools.configuration.loadFromSrc");
-		const withoutPrefix = commandIdToToolName("configuration.loadFromSrc");
+		const withPrefix = commandIdToToolName("1c-platform-tools.cf.load");
+		const withoutPrefix = commandIdToToolName("cf.load");
 		assert.strictEqual(withPrefix, withoutPrefix);
-		assert.strictEqual(withPrefix, "configuration_loadFromSrc");
+		assert.strictEqual(withPrefix, "cf_load");
 	});
 
 	it("применяет аббревиатуры и заменяет точки на подчёркивания", () => {
@@ -134,7 +134,7 @@ describe("uniqueToolName", () => {
 
 	it("запасное имя укладывается в лимит длины", () => {
 		const used = new Set<string>();
-		const longId = "1c-platform-tools.configuration.loadIncrementFromSrcWithVeryLongTail";
+		const longId = "1c-platform-tools.cf.loadIncrementWithVeryLongTail";
 		uniqueToolName(longId, used);
 		const fallback = uniqueToolName(longId, used);
 		assert.ok(

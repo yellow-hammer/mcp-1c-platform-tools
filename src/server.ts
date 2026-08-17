@@ -42,18 +42,17 @@ export interface CommandGateway {
 	): Promise<unknown>;
 }
 
-/** Параметры вызова инструмента: набор полей зависит от команды. */
+/**
+ * Параметры вызова инструмента: набор полей зависит от команды.
+ *
+ * Поля, кроме projectPath и wait, уходят команде расширения как есть, поэтому
+ * новый параметр в схеме инструмента ({@link paramsForCommand}) начинает работать
+ * без правок здесь.
+ */
 export interface ToolParams {
 	projectPath?: string;
 	wait?: boolean;
-	settingsFile?: string;
-	ibConnection?: string;
-	sha?: string;
-	extensions?: string[];
-	profile?: string;
-	frameworks?: string[];
-	execute?: string;
-	command?: string;
+	[option: string]: unknown;
 }
 
 /** Ответ инструмента MCP. */
@@ -94,22 +93,15 @@ export async function runTool(
 ): Promise<ToolResult> {
 	const wait = params.wait ?? true;
 	const timeoutMs = wait ? readWaitTimeout() : TIMEOUT_DEFAULT_MS;
+	// projectPath адресует проект, wait управляет ожиданием; остальное - параметры
+	// самой команды, и они уходят расширению без перечисления по именам.
+	const { projectPath, wait: _wait, ...commandOptions } = params;
 
 	try {
 		const result = await gateway.executeCommand(
 			commandId,
-			[{
-				wait,
-				settingsFile: params.settingsFile,
-				ibConnection: params.ibConnection,
-				sha: params.sha,
-				extensions: params.extensions,
-				profile: params.profile,
-				frameworks: params.frameworks,
-				execute: params.execute,
-				command: params.command,
-			}],
-			params.projectPath,
+			[{ wait, ...commandOptions }],
+			projectPath,
 			timeoutMs
 		);
 		const text = formatCommandResult(result);

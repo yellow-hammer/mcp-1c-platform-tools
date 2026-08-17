@@ -56,7 +56,7 @@ const DESCRIPTORS: CommandDescriptor[] = [
 		supportsWait: true,
 	},
 	{
-		id: "1c-platform-tools.configuration.loadIncrementFromSrc",
+		id: "1c-platform-tools.cf.loadIncrement",
 		title: "Загрузить изменения (git diff)",
 		category: "1C: Конфигурация",
 		supportsWait: true,
@@ -112,7 +112,7 @@ describe("createMcpServer", () => {
 		const { tools } = await client.listTools();
 
 		const xunit = tools.find((tool) => tool.name === "test_xunit");
-		const increment = tools.find((tool) => tool.name === "configuration_loadIncFromSrc");
+		const increment = tools.find((tool) => tool.name === "cf_loadInc");
 		const xunitProps = Object.keys(xunit?.inputSchema.properties ?? {});
 		const incrementProps = Object.keys(increment?.inputSchema.properties ?? {});
 
@@ -145,16 +145,33 @@ describe("createMcpServer", () => {
 		const client = await connect(gateway);
 
 		await client.callTool({
-			name: "configuration_loadIncFromSrc",
+			name: "cf_loadInc",
 			arguments: { projectPath: "C:/work/erp", sha: "HEAD~1" },
 		});
 
 		assert.strictEqual(gateway.calls.length, 1);
-		assert.strictEqual(gateway.calls[0].commandId, "1c-platform-tools.configuration.loadIncrementFromSrc");
+		assert.strictEqual(gateway.calls[0].commandId, "1c-platform-tools.cf.loadIncrement");
 		assert.strictEqual(gateway.calls[0].projectPath, "C:/work/erp");
 		const flags = (gateway.calls[0].args?.[0] ?? {}) as Record<string, unknown>;
 		assert.strictEqual(flags.sha, "HEAD~1");
 		assert.strictEqual(flags.wait, true, "по умолчанию команда выполняется синхронно");
+		await client.close();
+	});
+
+	it("до команды доходит каждый параметр из схемы инструмента", async () => {
+		// Схема принимала параметры сеансов, цепочек и обновления БД, а до расширения
+		// доходил только перечисленный вручную набор: агент задавал их вхолостую.
+		const gateway = new FakeGateway(DESCRIPTORS);
+		const client = await connect(gateway);
+
+		await client.callTool({
+			name: "cf_loadInc",
+			arguments: { projectPath: "C:/work/erp", sha: "", updateDb: true },
+		});
+
+		const flags = (gateway.calls[0].args?.[0] ?? {}) as Record<string, unknown>;
+		assert.strictEqual(flags.updateDb, true, "параметр команды должен доходить до расширения");
+		assert.ok(!('projectPath' in flags), "projectPath адресует проект, а не команду");
 		await client.close();
 	});
 
