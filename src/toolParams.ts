@@ -188,7 +188,6 @@ const updateDbShape = {
 const WITHOUT_SETTINGS = [
 	"1c-platform-tools.env.",
 	"1c-platform-tools.launch.",
-	"1c-platform-tools.testing.",
 	"1c-platform-tools.dependencies.",
 	"1c-platform-tools.oscript.",
 	"1c-platform-tools.components.",

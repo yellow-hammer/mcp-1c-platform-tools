@@ -8,11 +8,12 @@
 | `settingsFile` | Файл настроек vanessa-runner относительно `projectPath`. По умолчанию активный профиль проекта (`env.json`) |
 | `ibConnection` | Явная строка подключения к ИБ. Без неё берётся значение из файла настроек, иначе `/F./build/ib` |
 | `pathsOverride` | Переопределение стандартных каталогов проекта (см. ниже) |
-| `sha` | SHA коммита для `configuration_loadIncFromSrc`; пустая строка — полная загрузка |
-| `extensions` | Явный список имён расширений для `extensions_*` и тестовых `test_*Exts`; без него — сохранённый выбор проекта |
+| `sha` | SHA коммита для `cf_loadInc`; пустая строка — полная загрузка |
+| `extensions` | Явный список имён расширений для `cfe_*` и тестовых `test_*Exts`; без него — сохранённый выбор проекта |
+| `updateDb` | Обновить конфигурацию БД (UpdateDBCfg) тем же запуском после загрузки: `cf_load`, `cf_loadFile`, `cf_loadByList`, `cf_loadInc`, `cfe_load`. Без параметра загрузка идёт без обновления, если в настройках проекта не задано иное |
 | `profile` | Имя env-профиля для `env_selectProfile` (id, имя файла или подпись) |
 | `frameworks` | Включаемые тестовые фреймворки для `test_configure` (vanessa, xunit, yaxunit, onescript, onebdd) |
-| `execute`, `command` | Путь к EPF/ERF и строка `/C` для `externalProcs_run` |
+| `execute`, `command` | Путь к EPF/ERF и строка `/C` для `epf_run` |
 | `wait` | Ждать завершения и вернуть `{ success, exitCode, stdout, stderr, tests, artifact, durationMs }`. По умолчанию `true`: без ожидания исход операции неизвестен. `false` — команда уходит в UI-терминал, управление возвращается сразу |
 
 Синхронный вызов ждёт до 30 минут; предел меняется переменной окружения `MCP_1C_WAIT_TIMEOUT_MS` в конфиге MCP. У самого агента бывает свой предел ожидания: если он обрывает долгую операцию, запускайте её с `wait: false` и смотрите ход выполнения в терминале VS Code.
