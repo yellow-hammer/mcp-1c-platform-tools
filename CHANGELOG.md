@@ -5,6 +5,33 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/),
 и этот проект придерживается [Semantic Versioning](https://semver.org/lang/ru/).
 
+## [0.2.0] - 2026-08-19
+
+
+### Новые возможности
+
+- **tools:** [**BREAKING**] Перевели имена инструментов на словарь команд
+
+
+### Исправления
+
+- **tools:** Починили передачу параметров в команды расширения
+
+- **deps:** Подняли js-yaml и brace-expansion до исправленных версий
+
+
+### Прочее
+
+- **deps:** Bump hono in the npm_and_yarn group across 1 directory
+
+- **deps:** Bump fast-uri in the npm_and_yarn group across 1 directory
+
+
+### Документация
+
+- **tools:** Обновили справку по параметрам инструментов
+
+
 ## [0.1.12] - 2026-08-01
 
 
