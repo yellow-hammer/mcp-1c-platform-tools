@@ -48,7 +48,7 @@ const shaShape = {
 /** Команды тестовых расширений: отбор такой же, как у расширений решения. */
 const TEST_EXTENSION_COMMANDS = [
 	"1c-platform-tools.test.loadExtensions",
-	"1c-platform-tools.test.buildExtensions",
+	"1c-platform-tools.test.compileExtensions",
 	"1c-platform-tools.test.dumpExtensions",
 	"1c-platform-tools.test.decompileExtensions",
 ];
@@ -57,7 +57,7 @@ const extensionsShape = {
 	extensions: z
 		.array(z.string())
 		.optional()
-		.describe("Имена расширений: каталоги в исходниках расширений, а для команд тестовых расширений - в их каталоге. Без параметра берётся сохранённый выбор проекта"),
+		.describe("Расширения: имя каталога, путь от корня рабочей области или имя из метаданных. Без параметра берётся сохранённый выбор проекта"),
 } as const;
 
 const profileShape = {
@@ -229,7 +229,8 @@ export function paramsForCommand(commandId: string): ToolParamsShape {
 	if (commandId === "1c-platform-tools.test.configure") {
 		Object.assign(shape, frameworksShape);
 	}
-	if (commandId === "1c-platform-tools.run.enterprise") {
+	// Обработку и строку /C принимают и запуск Предприятия, и запуск обработки
+	if (commandId === "1c-platform-tools.run.enterprise" || commandId === "1c-platform-tools.epf.run") {
 		Object.assign(shape, enterpriseShape);
 	}
 	if (commandId.startsWith("1c-platform-tools.session.")) {
