@@ -1,5 +1,7 @@
 # 1C: Platform Tools MCP
 
+[![VS Marketplace](https://img.shields.io/visual-studio-marketplace/v/yellow-hammer.mcp-1c-platform-tools?label=VS%20Marketplace&logo=visualstudiocode&color=0098FF)](https://marketplace.visualstudio.com/items?itemName=yellow-hammer.mcp-1c-platform-tools)
+[![Open VSX](https://img.shields.io/open-vsx/v/yellow-hammer/mcp-1c-platform-tools?label=Open%20VSX&logo=eclipseide&color=C160EF)](https://open-vsx.org/extension/yellow-hammer/mcp-1c-platform-tools)
 [![OpenYellow](https://openyellow.openintegrations.dev/data/badges/1160221881.png)](https://openyellow.org/grid?filter=top&repo=1160221881)
 [![telegram chat](resources/badges/telegram-chat.png)](https://t.me/wonder_yellow)
 [![Ask Devin](resources/badges/deepwiki-badge.png)](https://deepwiki.com/yellow-hammer/mcp-1c-platform-tools)
@@ -30,8 +32,7 @@ MCP-сервер даёт агенту Cursor или VS Code доступ к к�
 
 ## Документация
 
-- [Что писать агенту](docs/examples.md)
-- [Параметры инструментов](docs/tool-parameters.md)
+Каталог `docs` публикуется на сайте 1C: Platform Tools разделом [MCP-сервер](https://yellow-hammer.github.io/vscode-1c-platform-tools/mcp/): [установка и подключение](docs/index.md), [параметры инструментов](docs/tool-parameters.md), [что писать агенту](docs/examples.md).
 
 ## Настройка вручную
 
