@@ -1,0 +1,26 @@
+# Сайт 1C: Platform Tools собирает раздел «MCP-сервер» из каталога docs этого
+# репозитория: после правок документации просим его пересобраться.
+# Нужен секрет DOCS_DISPATCH_TOKEN с правом repo на vscode-1c-platform-tools;
+# без него сайт подхватит правки ежедневной пересборкой.
+name: Docs
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+
+permissions: {}
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    env:
+      TOKEN: ${{ secrets.DOCS_DISPATCH_TOKEN }}
+    steps:
+      - name: Пересобрать сайт расширения
+        if: ${{ env.TOKEN != '' }}
+        run: gh api repos/yellow-hammer/vscode-1c-platform-tools/dispatches -f event_type=docs
+        env:
+          GH_TOKEN: ${{ env.TOKEN }}
