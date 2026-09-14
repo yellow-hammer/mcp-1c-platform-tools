@@ -104,3 +104,20 @@ describe("paramsForCommand: сеансы и цепочки", () => {
 		assert.ok(shape.includes("command"), "нет строки параметров /C");
 	});
 });
+
+describe("paramsForCommand: проекты окна", () => {
+	it("выбор проекта требует root и не принимает projectPath", () => {
+		const shape = paramsForCommand("1c-platform-tools.project.select");
+		assert.deepStrictEqual(Object.keys(shape).sort(), ["root", "wait"]);
+		assert.strictEqual(shape.root.safeParse(undefined).success, false, "root обязателен");
+		assert.strictEqual(shape.root.safeParse("C:/work/erp").success, true);
+	});
+
+	it("список проектов обходится без параметров команды", () => {
+		assert.deepStrictEqual(keys("1c-platform-tools.project.list"), ["wait"]);
+	});
+
+	it("инициализация проекта получает каталог в projectPath без настроек прогона", () => {
+		assert.deepStrictEqual(keys("1c-platform-tools.project.initialize"), ["projectPath", "wait"]);
+	});
+});

@@ -27,6 +27,10 @@ export interface StructuredCommandResult {
 	errors?: StructuredSyntaxError[];
 	/** Сводка прогона тестов по jUnit-отчёту (тестовые команды). */
 	tests?: TestRunStats;
+	/** Корень проекта, в котором выполнилась команда. */
+	projectRoot?: string;
+	/** Данные команды, например список проектов окна; приходят агенту целиком. */
+	data?: unknown;
 }
 
 /**
@@ -144,6 +148,10 @@ function formatStructured(r: StructuredCommandResult): string {
 		lines.push(`Артефакт: ${r.artifact}`);
 	}
 
+	if (r.projectRoot) {
+		lines.push(`Проект: ${r.projectRoot}`);
+	}
+
 	if (r.durationMs != null) {
 		lines.push(`Время выполнения: ${(r.durationMs / 1000).toFixed(1)} с`);
 	}
@@ -156,6 +164,10 @@ function formatStructured(r: StructuredCommandResult): string {
 	const stderr = r.stderr?.trim();
 	if (stderr) {
 		lines.push(`\nСтандартный вывод ошибок:\n${clampOutput(stderr)}`);
+	}
+
+	if (r.data !== undefined && r.data !== null) {
+		lines.push(`\nДанные:\n${JSON.stringify(r.data, null, 2)}`);
 	}
 
 	if (r.errors && r.errors.length > 0) {
