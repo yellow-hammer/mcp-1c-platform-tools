@@ -202,6 +202,13 @@ jobs:
       - name: Собрать VSIX
         run: npm run package
 
+      - name: Определить путь к VSIX
+        id: vsix
+        run: |
+          VSIX=$(ls -1 *.vsix | head -n1)
+          echo "path=$VSIX" >> "$GITHUB_OUTPUT"
+          echo "Собран VSIX: $VSIX"
+
       - name: Создать GitHub Release
         uses: softprops/action-gh-release@v3
         with:
@@ -222,17 +229,10 @@ jobs:
 
       - name: Опубликовать в Open VSX Registry
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.skip_publish != 'true'
-        uses: HaaLeo/publish-vscode-extension@v2
-        id: publishToOpenVSX
-        with:
-          pat: ${{ env.OVSX_TOKEN }}
-          skipDuplicate: true
+        run: npx --yes ovsx@1.2.0 publish --packagePath "${{ steps.vsix.outputs.path }}" --skip-duplicate
+        env:
+          OVSX_PAT: ${{ env.OVSX_TOKEN }}
 
       - name: Опубликовать в VS Code Marketplace
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.skip_publish != 'true'
-        uses: HaaLeo/publish-vscode-extension@v2
-        with:
-          pat: ${{ env.VSCE_PAT }}
-          registryUrl: https://marketplace.visualstudio.com
-          extensionFile: ${{ steps.publishToOpenVSX.outputs.vsixPath }}
-          skipDuplicate: true
+        run: npx vsce publish --packagePath "${{ steps.vsix.outputs.path }}" --skip-duplicate
