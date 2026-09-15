@@ -48,10 +48,10 @@ jobs:
         with:
           fetch-depth: 0 # нужно для git-cliff
 
-      - name: Установить Node.js 20
+      - name: Установить Node.js 22
         uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Установить зависимости
