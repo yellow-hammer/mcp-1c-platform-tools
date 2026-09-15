@@ -13,8 +13,8 @@ const commonShape = {
 		.string()
 		.optional()
 		.describe(
-			"Корень проекта 1С: каталог с packagedef или env.json. " +
-			"Можно не передавать, если в VS Code открыт один проект"
+			"Корень проекта 1С: каталог с packagedef. Без параметра команда выполняется в текущем проекте окна, " +
+			"относительный путь считается от него. Текущий проект параметр не меняет"
 		),
 	wait: z
 		.boolean()
@@ -165,6 +165,34 @@ const pipelineShape = {
 		),
 } as const;
 
+/** Выбор текущего проекта окна. */
+const projectSelectShape = {
+	root: z
+		.string()
+		.describe("Корень проекта из ответа project_list: абсолютный путь каталога с packagedef"),
+} as const;
+
+/** Инициализация проекта: projectPath указывает каталог, в котором создаётся packagedef. */
+const INITIALIZE_COMMANDS = [
+	"1c-platform-tools.project.initialize",
+	"1c-platform-tools.dependencies.initializePackagedef",
+];
+
+const initializeShape = {
+	projectPath: z
+		.string()
+		.describe(
+			"Каталог, в котором создать packagedef: папка рабочей области или каталог из candidates ответа project_list, " +
+			"в том числе внутри проекта. Относительный путь считается от текущего проекта"
+		),
+} as const;
+
+/** Команды окна: список проектов и выбор текущего, projectPath к ним не применяется. */
+const WINDOW_COMMANDS = [
+	"1c-platform-tools.project.list",
+	"1c-platform-tools.project.select",
+];
+
 /** Команды загрузки: применение загруженного к конфигурации БД задаётся вызовом. */
 const LOAD_COMMANDS = [
 	"1c-platform-tools.cf.load",
@@ -192,6 +220,7 @@ const WITHOUT_SETTINGS = [
 	"1c-platform-tools.oscript.",
 	"1c-platform-tools.components.",
 	"1c-platform-tools.pipelines.",
+	"1c-platform-tools.project.",
 ];
 
 /** Команды, которым нужны каталоги проекта. */
@@ -206,6 +235,16 @@ export type ToolParamsShape = Record<string, z.ZodTypeAny>;
  * @returns поля схемы инструмента
  */
 export function paramsForCommand(commandId: string): ToolParamsShape {
+	if (WINDOW_COMMANDS.includes(commandId)) {
+		return commandId === "1c-platform-tools.project.select"
+			? { wait: commonShape.wait, ...projectSelectShape }
+			: { wait: commonShape.wait };
+	}
+
+	if (INITIALIZE_COMMANDS.includes(commandId)) {
+		return { ...initializeShape, wait: commonShape.wait };
+	}
+
 	const shape: ToolParamsShape = { ...commonShape };
 
 	if (!WITHOUT_SETTINGS.some((prefix) => commandId.startsWith(prefix))) {

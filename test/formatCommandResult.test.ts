@@ -176,6 +176,40 @@ describe("formatCommandResult", () => {
 	});
 });
 
+describe("formatCommandResult: проект и данные команды", () => {
+	it("корень проекта, в котором выполнилась команда, виден в ответе", () => {
+		const text = formatCommandResult({ success: true, exitCode: 0, projectRoot: "C:/work/erp" });
+		assert.match(text, /Проект: C:\/work\/erp/);
+	});
+
+	it("данные команды без вывода приходят JSON", () => {
+		const text = formatCommandResult({
+			success: true,
+			exitCode: 0,
+			stdout: "",
+			data: { current: "C:/work/erp", projects: [{ root: "C:/work/erp", name: "erp" }] },
+		});
+		assert.match(text, /Данные:/);
+		assert.match(text, /"current": "C:\/work\/erp"/);
+	});
+
+	it("большой список проектов приходит целиком: текущий проект и первые проекты не теряются", () => {
+		const projects = Array.from({ length: 400 }, (_, index) => ({
+			root: `C:/work/project-${index}`,
+			name: `project-${index}`,
+			subProject: false,
+			current: index === 0,
+		}));
+		const data = { current: "C:/work/project-0", projects, candidates: [] };
+
+		const text = formatCommandResult({ success: true, exitCode: 0, stdout: "", data });
+
+		assert.ok(JSON.stringify(data, null, 2).length > 12_000);
+		assert.doesNotMatch(text, /пропущено/);
+		assert.deepStrictEqual(JSON.parse(text.slice(text.indexOf("{"))), data);
+	});
+});
+
 describe("clampOutput", () => {
 	it("короткий вывод не меняется", () => {
 		assert.strictEqual(clampOutput("две строки\nтекста"), "две строки\nтекста");

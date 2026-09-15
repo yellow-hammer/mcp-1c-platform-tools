@@ -57,6 +57,11 @@ describe("toolName", () => {
 		assert.strictEqual(withPrefix, "cf_load");
 	});
 
+	it("инструменты проектов окна называются без сокращений", () => {
+		assert.strictEqual(commandIdToToolName("1c-platform-tools.project.list"), "project_list");
+		assert.strictEqual(commandIdToToolName("1c-platform-tools.project.select"), "project_select");
+	});
+
 	it("применяет аббревиатуры и заменяет точки на подчёркивания", () => {
 		assert.strictEqual(
 			commandIdToToolName("1c-platform-tools.dependencies.initializeProjectStructure"),

@@ -11,6 +11,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createMcpServer, CommandGateway } from "../src/server.js";
 import type { CommandDescriptor } from "../src/ipcClient.js";
+import { commandIdToToolName } from "../src/toolName.js";
 
 /** Вызов команды, записанный подделкой шлюза. */
 interface RecordedCall {
@@ -135,7 +136,7 @@ describe("createMcpServer", () => {
 		const client = await connect(new FakeGateway(DESCRIPTORS));
 
 		const instructions = client.getInstructions() ?? "";
-		assert.match(instructions, /onec_env_status/);
+		assert.ok(instructions.includes(commandIdToToolName("1c-platform-tools.env.status")), instructions);
 		assert.match(instructions, /wait: false/);
 		await client.close();
 	});
@@ -251,6 +252,84 @@ describe("createMcpServer", () => {
 
 		const names = tools.map((tool) => tool.name);
 		assert.strictEqual(new Set(names).size, names.length, `имена повторяются: ${names}`);
+		await client.close();
+	});
+});
+
+describe("createMcpServer: проекты окна", () => {
+	const PROJECT_DESCRIPTORS: CommandDescriptor[] = [
+		{ id: "1c-platform-tools.project.list", title: "Показать проекты 1С", category: "1С: Проект", supportsWait: true },
+		{ id: "1c-platform-tools.project.select", title: "Сделать проект текущим", category: "1С: Проект", supportsWait: true },
+	];
+
+	it("выбор проекта требует root, projectPath у инструментов проектов нет", async () => {
+		const client = await connect(new FakeGateway(PROJECT_DESCRIPTORS));
+		const { tools } = await client.listTools();
+
+		const select = tools.find((tool) => tool.name === "project_select");
+		const list = tools.find((tool) => tool.name === "project_list");
+		assert.deepStrictEqual(select?.inputSchema.required, ["root"]);
+		assert.ok(!Object.keys(select?.inputSchema.properties ?? {}).includes("projectPath"));
+		assert.deepStrictEqual(Object.keys(list?.inputSchema.properties ?? {}), ["wait"]);
+		await client.close();
+	});
+
+	it("корень проекта доходит до команды выбора параметром команды", async () => {
+		const gateway = new FakeGateway(PROJECT_DESCRIPTORS);
+		const client = await connect(gateway);
+
+		await client.callTool({ name: "project_select", arguments: { root: "C:/work/retail" } });
+
+		assert.strictEqual(gateway.calls[0].commandId, "1c-platform-tools.project.select");
+		assert.strictEqual(gateway.calls[0].projectPath, undefined);
+		assert.deepStrictEqual(gateway.calls[0].args, [{ wait: true, root: "C:/work/retail" }]);
+		await client.close();
+	});
+
+	it("инициализация проекта требует каталог в projectPath и передаёт его каналу", async () => {
+		const gateway = new FakeGateway([
+			...PROJECT_DESCRIPTORS,
+			{ id: "1c-platform-tools.project.initialize", title: "Инициализировать проект", category: "1С: Проект", supportsWait: true },
+			{ id: "1c-platform-tools.dependencies.initializePackagedef", title: "Инициализировать проект", category: "1С: Зависимости", supportsWait: true },
+		]);
+		const client = await connect(gateway);
+		const { tools } = await client.listTools();
+
+		for (const name of ["project_init", "deps_initPackagedef"]) {
+			const tool = tools.find((item) => item.name === name);
+			assert.deepStrictEqual(tool?.inputSchema.required, ["projectPath"], name);
+			assert.deepStrictEqual(Object.keys(tool?.inputSchema.properties ?? {}).sort(), ["projectPath", "wait"], name);
+		}
+		await client.callTool({ name: "project_init", arguments: { projectPath: "C:/work/erp/поставка" } });
+
+		assert.strictEqual(gateway.calls[0].commandId, "1c-platform-tools.project.initialize");
+		assert.strictEqual(gateway.calls[0].projectPath, "C:/work/erp/поставка");
+		assert.deepStrictEqual(gateway.calls[0].args, [{ wait: true }]);
+		await client.close();
+	});
+
+	it("инструкция объясняет, как увидеть проекты и переключить текущий", async () => {
+		const client = await connect(new FakeGateway(PROJECT_DESCRIPTORS));
+
+		const instructions = client.getInstructions() ?? "";
+		assert.match(instructions, /projectPath выполняет один вызов в указанном проекте и текущий проект не меняет/);
+		await client.close();
+	});
+
+	it("инструкция называет инструменты так, как их регистрирует сервер", async () => {
+		const client = await connect(new FakeGateway(PROJECT_DESCRIPTORS));
+
+		const instructions = client.getInstructions() ?? "";
+		const named = [...instructions.matchAll(/\b[a-z]+_[A-Za-z]+\b/g)].map((match) => match[0]);
+		const real = [
+			"1c-platform-tools.env.status",
+			"1c-platform-tools.env.selectProfile",
+			"1c-platform-tools.project.list",
+			"1c-platform-tools.project.select",
+			"1c-platform-tools.project.initialize",
+			"1c-platform-tools.pipelines.run",
+		].map((id) => commandIdToToolName(id));
+		assert.deepStrictEqual([...new Set(named)].sort(), [...real].sort());
 		await client.close();
 	});
 });
