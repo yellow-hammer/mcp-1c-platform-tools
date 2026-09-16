@@ -5,6 +5,19 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/),
 и этот проект придерживается [Semantic Versioning](https://semver.org/lang/ru/).
 
+## [0.2.3] - 2026-09-16
+
+
+### Новые возможности
+
+- Добавили инструментам сборки выбор каталога и имени собранных файлов
+
+
+### Обслуживание
+
+- **ci:** Update Node.js version in release workflow from 20 to 22
+
+
 ## [0.2.2] - 2026-09-15
 
 
