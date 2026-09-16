@@ -212,6 +212,35 @@ const updateDbShape = {
 		),
 } as const;
 
+/** Команды сборки и выгрузки в файл: путь результата задаётся вызовом. */
+const OUTPUT_COMMANDS = [
+	"1c-platform-tools.cf.compile",
+	"1c-platform-tools.cf.unload",
+	"1c-platform-tools.cf.makeDist",
+	"1c-platform-tools.cfe.compile",
+	"1c-platform-tools.cfe.unload",
+	"1c-platform-tools.epf.compileProcessor",
+	"1c-platform-tools.epf.compileReport",
+];
+
+const outputShape = {
+	outputDirectory: z
+		.string()
+		.optional()
+		.describe(
+			"Каталог результата: относительно projectPath или абсолютный. Без параметра - каталог сборки проекта. " +
+			"Переменные те же, что у outputName"
+		),
+	outputName: z
+		.string()
+		.optional()
+		.describe(
+			"Имя файла без расширения, расширение ставится по типу файла. Переменные: ${name} (имя в метаданных), " +
+			"${folder} (каталог исходного кода), ${version} (версия конфигурации или расширения из исходного кода), " +
+			"${gitBranch}. Когда объектов несколько, имя без переменных даёт им один файл, и команда не запускается"
+		),
+} as const;
+
 /** Команды, которым не нужны настройки vanessa-runner. */
 const WITHOUT_SETTINGS = [
 	"1c-platform-tools.env.",
@@ -255,6 +284,9 @@ export function paramsForCommand(commandId: string): ToolParamsShape {
 	}
 	if (LOAD_COMMANDS.includes(commandId)) {
 		Object.assign(shape, updateDbShape);
+	}
+	if (OUTPUT_COMMANDS.includes(commandId)) {
+		Object.assign(shape, outputShape);
 	}
 	if (
 		commandId.startsWith("1c-platform-tools.cfe.") ||
