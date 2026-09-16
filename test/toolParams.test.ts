@@ -54,6 +54,16 @@ describe("paramsForCommand", () => {
 		assert.ok(!keys("1c-platform-tools.build.cf").includes("extensions"));
 	});
 
+	it("сборка и выгрузка в файл получают outputDirectory и outputName", () => {
+		for (const id of ["1c-platform-tools.cf.compile", "1c-platform-tools.cfe.unload", "1c-platform-tools.epf.compileReport"]) {
+			const shape = keys(id);
+			assert.ok(shape.includes("outputDirectory"), `outputDirectory у ${id}`);
+			assert.ok(shape.includes("outputName"), `outputName у ${id}`);
+		}
+		assert.ok(!keys("1c-platform-tools.cf.decompile").includes("outputName"));
+		assert.ok(!keys("1c-platform-tools.test.compileExtensions").includes("outputName"));
+	});
+
 	it("запуск Предприятия получает execute и command: ими открывают обработку", () => {
 		const shape = keys("1c-platform-tools.run.enterprise");
 		assert.ok(shape.includes("execute"));

@@ -50,6 +50,15 @@ describe("formatCommandResult", () => {
 			);
 		});
 
+		it("перечисляет собранные файлы, когда их несколько", () => {
+			const result = formatCommandResult({
+				success: true,
+				exitCode: 0,
+				artifacts: ["build/release/Первое-1.0.cfe", "build/release/Второе-2.0.cfe"],
+			});
+			assert.ok(result.includes("Артефакты:\n  - build/release/Первое-1.0.cfe\n  - build/release/Второе-2.0.cfe"), result);
+		});
+
 		it("включает время выполнения", () => {
 			const result = formatCommandResult({
 				success: true,

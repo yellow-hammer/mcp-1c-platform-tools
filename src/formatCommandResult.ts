@@ -17,6 +17,8 @@ export interface StructuredCommandResult {
 	stderr?: string;
 	/** Путь к итоговому артефакту (.epf, .cf, .cfe, отчёту и т.п.). */
 	artifact?: string;
+	/** Собранные файлы, когда команда собирает несколько объектов. */
+	artifacts?: string[];
 	/** ISO-строка времени начала операции. */
 	startedAt?: string;
 	/** ISO-строка времени окончания операции. */
@@ -144,7 +146,12 @@ function formatStructured(r: StructuredCommandResult): string {
 		lines.push(`Ошибка (exitCode: ${r.exitCode})`);
 	}
 
-	if (r.artifact) {
+	if (r.artifacts && r.artifacts.length > 1) {
+		lines.push("Артефакты:");
+		for (const artifact of r.artifacts) {
+			lines.push(`  - ${artifact}`);
+		}
+	} else if (r.artifact) {
 		lines.push(`Артефакт: ${r.artifact}`);
 	}
 

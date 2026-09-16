@@ -14,7 +14,9 @@
 | `profile` | Имя env-профиля для `env_selectProfile` (id, имя файла или подпись) |
 | `frameworks` | Включаемые тестовые фреймворки для `test_configure` (vanessa, xunit, yaxunit, onescript, onebdd) |
 | `execute`, `command` | Путь к EPF/ERF и строка `/C` для `epf_run` |
-| `wait` | Ждать завершения и вернуть `{ success, exitCode, stdout, stderr, tests, artifact, durationMs }`. По умолчанию `true`: без ожидания исход операции неизвестен. `false` — команда уходит в UI-терминал, управление возвращается сразу |
+| `outputDirectory` | Каталог результата сборки и выгрузки в файл: `cf_compile`, `cf_unload`, `cf_makeDist`, `cfe_compile`, `cfe_unload`, `epf_compileProc`, `epf_compileReport`. Относительно `projectPath` или абсолютный |
+| `outputName` | Имя файла без расширения для тех же инструментов. Переменные `${name}`, `${folder}`, `${version}`, `${gitBranch}` подставляются и в `outputDirectory` |
+| `wait` | Ждать завершения и вернуть `{ success, exitCode, stdout, stderr, tests, artifact, artifacts, durationMs }`. По умолчанию `true`: без ожидания исход операции неизвестен. `false` — команда уходит в UI-терминал, управление возвращается сразу |
 
 Синхронный вызов ждёт до 30 минут; предел меняется переменной окружения `MCP_1C_WAIT_TIMEOUT_MS` в конфиге MCP. У самого агента бывает свой предел ожидания: если он обрывает долгую операцию, запускайте её с `wait: false` и смотрите ход выполнения в терминале VS Code.
 
