@@ -219,6 +219,14 @@ describe("formatCommandResult: проект и данные команды", () 
 	});
 });
 
+describe("formatCommandResult: команды без исхода", () => {
+	it("не советует wait: true команде, которая исход не возвращает", () => {
+		const text = formatCommandResult(undefined, false);
+		assert.doesNotMatch(text, /wait: true/);
+		assert.match(text, /не возвращает/);
+	});
+});
+
 describe("formatData", () => {
 	it("данные с отступами, пока помещаются", () => {
 		assert.strictEqual(formatData({ a: 1 }), '{\n  "a": 1\n}');

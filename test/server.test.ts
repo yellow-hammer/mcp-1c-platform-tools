@@ -176,6 +176,18 @@ describe("createMcpServer", () => {
 		await client.close();
 	});
 
+	it("команда без исхода не советует wait: true", async () => {
+		const gateway = new FakeGateway(
+			[{ id: "1c-platform-tools.server.start", title: "Запустить", category: "1С: Автономный сервер", supportsWait: false }],
+			null
+		);
+		const client = await connect(gateway);
+		const answer = await client.callTool({ name: "server_start", arguments: {} });
+		const text = (answer.content as Array<{ text: string }>)[0].text;
+		assert.doesNotMatch(text, /wait: true/);
+		assert.match(text, /не возвращает/);
+		await client.close();
+	});
 	it("упавшие тесты помечают ответ как неуспешный", async () => {
 		const failing = {
 			success: true,

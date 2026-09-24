@@ -253,10 +253,15 @@ export function isFailedResult(result: unknown): boolean {
  * - null/undefined — команда выполнена в UI-терминале без возврата данных.
  *
  * @param result — значение, возвращённое executeCommand
+ * @param returnsOutcome — команда умеет возвращать исход при wait: true
  * @returns читаемая строка для агента
  */
-export function formatCommandResult(result: unknown): string {
+export function formatCommandResult(result: unknown, returnsOutcome = true): string {
 	if (result === undefined || result === null) {
+		if (!returnsOutcome) {
+			// Совет про wait: true такой команде не поможет: исход она не возвращает вовсе
+			return "Команда запущена. Исход операции эта команда не возвращает: проверьте результат отдельным вызовом.";
+		}
 		return "Команда запущена в UI-терминале. Результат выполнения отображается в панели 1C: Platform Tools. Для получения структурированного вывода используйте параметр wait: true.";
 	}
 
