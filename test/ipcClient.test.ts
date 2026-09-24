@@ -66,6 +66,46 @@ describe("IpcClient", () => {
 		});
 	});
 
+	describe("request — кириллица на стыке порций", () => {
+		let server: net.Server;
+		let serverPort: number;
+		const name = "РегистрСведений.ДополнительныеАдресныеСведения";
+
+		before(() => {
+			return new Promise<void>((resolve) => {
+				server = net.createServer((socket) => {
+					socket.on("data", () => {
+						const bytes = Buffer.from(`${JSON.stringify({ id: null, result: { name } })}\n`, "utf8");
+						// Рвём ответ посреди двухбайтовой буквы: так его бывает режет сокет
+						const cut = bytes.indexOf(Buffer.from("н", "utf8")) + 1;
+						socket.write(bytes.subarray(0, cut));
+						setTimeout(() => {
+							socket.write(bytes.subarray(cut));
+							socket.end();
+						}, 20);
+					});
+				});
+				server.listen(0, "127.0.0.1", () => {
+					const addr = server.address();
+					serverPort = typeof addr === "object" && addr?.port ? addr.port : 0;
+					resolve();
+				});
+			});
+		});
+
+		after(() => {
+			return new Promise<void>((resolve) => {
+				server.close(() => resolve());
+			});
+		});
+
+		it("буква, разорванная между порциями, не портится", async () => {
+			const client = new IpcClient({ host: "127.0.0.1", port: serverPort, timeoutMs: 5000 });
+			const result = await client.request<{ name: string }>("test", {});
+			assert.strictEqual(result?.name, name);
+		});
+	});
+
 	describe("request — ответ с error", () => {
 		let server: net.Server;
 		let serverPort: number;
