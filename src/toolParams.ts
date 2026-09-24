@@ -241,6 +241,70 @@ const outputShape = {
 		),
 } as const;
 
+/** Запрос к стандартному интерфейсу OData. */
+const ODATA_QUERY_COMMAND = "1c-platform-tools.odata.query";
+
+/** Состав стандартного интерфейса OData. */
+const ODATA_SETUP_COMMAND = "1c-platform-tools.odata.setup";
+
+const odataQueryShape = {
+	resource: z
+		.string()
+		.describe(
+			"Ресурс относительно odata/standard.odata/: набор (Catalog_Номенклатура), элемент (Catalog_Номенклатура(guid'…')), " +
+			"свойство или $metadata. Параметры запроса можно дописать после ?"
+		),
+	method: z
+		.enum(["GET", "POST", "PUT", "PATCH", "DELETE"])
+		.optional()
+		.describe(
+			"Метод HTTP, по умолчанию GET. POST создаёт, PATCH меняет переданные поля, PUT заменяет элемент целиком " +
+			"(поля не из body сбрасываются), DELETE удаляет: " +
+			"только по явной просьбе пользователя"
+		),
+	url: z
+		.string()
+		.optional()
+		.describe(
+			"Адрес своей публикации ИБ (IIS, Apache): корень публикации, например http://srv/base. " +
+			"Без параметра запрос идёт в автономный сервер проекта"
+		),
+	filter: z.string().optional().describe("Отбор $filter, например Description eq 'Стол'"),
+	select: z.string().optional().describe("Поля $select через запятую, например Ref_Key,Description"),
+	expand: z.string().optional().describe("Связанные данные $expand"),
+	orderby: z.string().optional().describe("Сортировка $orderby, например Description desc"),
+	// Без int(): Zod 4 пишет в схему maximum 2^53, такие схемы Cursor отбрасывает целиком
+	top: z.number().min(0).optional().describe("Число записей $top, целое. Без него из набора читаются первые 100 записей и общее число"),
+	skip: z.number().min(0).optional().describe("Пропуск записей $skip, целое"),
+	// Строка, а не запись: z.record даёт в схеме propertyNames, и Cursor отбрасывает весь список инструментов
+	body: z
+		.string()
+		.optional()
+		.describe('Тело POST, PATCH и PUT: JSON объекта с полями, например {"Description":"Стол"}'),
+	settingsFile: z
+		.string()
+		.optional()
+		.describe("Файл настроек профиля, из которого берутся db-user и db-pwd. По умолчанию активный профиль"),
+} as const;
+
+const odataSetupShape = {
+	include: z
+		.array(z.string())
+		.optional()
+		.describe(
+			"Включить объекты в состав: полное имя (Справочник.Номенклатура) или имя набора OData (Catalog_Номенклатура). " +
+			"Остальной состав не меняется"
+		),
+	exclude: z
+		.array(z.string())
+		.optional()
+		.describe("Исключить объекты из состава, имена как у include. Остальной состав не меняется"),
+	available: z
+		.boolean()
+		.optional()
+		.describe("Добавить к ответу объекты проекта вне состава (имена наборов OData): их можно включить через include"),
+} as const;
+
 /** Команды, которым не нужны настройки vanessa-runner. */
 const WITHOUT_SETTINGS = [
 	"1c-platform-tools.env.",
@@ -272,6 +336,11 @@ export function paramsForCommand(commandId: string): ToolParamsShape {
 
 	if (INITIALIZE_COMMANDS.includes(commandId)) {
 		return { ...initializeShape, wait: commonShape.wait };
+	}
+
+	// Запросу к OData нужен только файл профиля с учётной записью: база задаётся адресом публикации
+	if (commandId === ODATA_QUERY_COMMAND) {
+		return { ...commonShape, ...odataQueryShape };
 	}
 
 	const shape: ToolParamsShape = { ...commonShape };
@@ -318,6 +387,9 @@ export function paramsForCommand(commandId: string): ToolParamsShape {
 	}
 	if (commandId === "1c-platform-tools.pipelines.run") {
 		Object.assign(shape, pipelineShape);
+	}
+	if (commandId === ODATA_SETUP_COMMAND) {
+		Object.assign(shape, odataSetupShape);
 	}
 
 	return shape;
