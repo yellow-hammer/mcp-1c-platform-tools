@@ -3,6 +3,7 @@
  * Используется standalone MCP-процессом для listCommands и executeCommand.
  */
 import * as net from "node:net";
+import { StringDecoder } from "node:string_decoder";
 import { randomUUID } from "node:crypto";
 import { logger } from "./loggerServer.js";
 
@@ -176,12 +177,14 @@ export class IpcClient {
 
 			socket.on("error", onError);
 
+			// Декодер держит байты символа, разорванного между порциями: иначе кириллица на стыке портится
+			const decoder = new StringDecoder("utf8");
 			socket.on("data", (data: Buffer) => {
 				if (finished) {
 					return;
 				}
 
-				buffer += data.toString("utf8");
+				buffer += decoder.write(data);
 				const index = buffer.indexOf("\n");
 
 				if (index === -1) {

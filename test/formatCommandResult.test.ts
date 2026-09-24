@@ -3,7 +3,7 @@
  */
 import { describe, it } from "node:test";
 import assert from "node:assert";
-import { formatCommandResult, clampOutput, isFailedResult } from "../src/formatCommandResult.js";
+import { formatCommandResult, clampOutput, formatData, isFailedResult } from "../src/formatCommandResult.js";
 
 describe("formatCommandResult", () => {
 	it("null/undefined → сообщение о UI-режиме с подсказкой wait: true", () => {
@@ -216,6 +216,31 @@ describe("formatCommandResult: проект и данные команды", () 
 		assert.ok(JSON.stringify(data, null, 2).length > 12_000);
 		assert.doesNotMatch(text, /пропущено/);
 		assert.deepStrictEqual(JSON.parse(text.slice(text.indexOf("{"))), data);
+	});
+});
+
+describe("formatCommandResult: команды без исхода", () => {
+	it("не советует wait: true команде, которая исход не возвращает", () => {
+		const text = formatCommandResult(undefined, false);
+		assert.doesNotMatch(text, /wait: true/);
+		assert.match(text, /не возвращает/);
+	});
+});
+
+describe("formatData", () => {
+	it("данные с отступами, пока помещаются", () => {
+		assert.strictEqual(formatData({ a: 1 }), '{\n  "a": 1\n}');
+	});
+
+	it("большие данные идут в одну строку, а сверх предела режутся с конца", () => {
+		const value = Array.from({ length: 1_800 }, (_, index) => ({ index, text: "x".repeat(20) }));
+		const compact = formatData({ value });
+		assert.ok(!compact.includes("\n  "), "без отступов");
+		assert.deepStrictEqual(JSON.parse(compact), { value });
+
+		const huge = formatData({ value: Array.from({ length: 5_000 }, () => "y".repeat(40)) });
+		assert.match(huge, /^\{"value":\["y+"/);
+		assert.match(huge, /конец данных пропущен/);
 	});
 });
 

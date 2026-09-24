@@ -76,6 +76,8 @@ export const SERVER_INSTRUCTIONS = [
 	"Разовый прогон под другим файлом настроек задаётся параметром settingsFile, он не меняет активный профиль. Переключение профиля целиком - env_selectProfile.",
 	"",
 	"Повторяющуюся последовательность шагов запускают одной цепочкой: pipelines_run с параметром pipeline. Цепочки лежат в .1cpt/pipelines.json проекта, их можно править файлом по схеме pipelines.schema.json. Ответ - пошаговый отчёт: что выполнено, что упало, сколько попыток. Шаг с подтверждением в таком запуске завершается ошибкой: подтверждать некому.",
+	"",
+	"Данные информационной базы читаются и меняются через стандартный интерфейс OData: odata_query. Запрос идёт в автономный сервер проекта (server_start с опубликованным OData) или в свою публикацию из параметра url, учётная запись берётся из профиля запуска. POST, PATCH, PUT и DELETE меняют данные: вызывайте их только по явной просьбе пользователя, не заодно с чтением. Объект, которого нет в составе интерфейса, включает odata_setup с параметром include; без параметров он показывает текущий состав.",
 ].join("\n");
 
 /**
@@ -84,12 +86,14 @@ export const SERVER_INSTRUCTIONS = [
  * @param gateway — источник команд расширения
  * @param commandId — идентификатор команды
  * @param params — параметры вызова инструмента
+ * @param returnsOutcome — команда возвращает исход при wait: true
  * @returns текстовый ответ; неуспех помечается isError
  */
 export async function runTool(
 	gateway: CommandGateway,
 	commandId: string,
-	params: ToolParams
+	params: ToolParams,
+	returnsOutcome = true
 ): Promise<ToolResult> {
 	const wait = params.wait ?? true;
 	const timeoutMs = wait ? readWaitTimeout() : TIMEOUT_DEFAULT_MS;
@@ -104,7 +108,7 @@ export async function runTool(
 			projectPath,
 			timeoutMs
 		);
-		const text = formatCommandResult(result);
+		const text = formatCommandResult(result, returnsOutcome);
 		return isFailedResult(result)
 			? { content: [{ type: "text", text }], isError: true }
 			: { content: [{ type: "text", text }] };
@@ -152,7 +156,7 @@ export async function createMcpServer(gateway: CommandGateway, version: string):
 						description: describeCommand(descriptor),
 						inputSchema: paramsForCommand(descriptor.id),
 					},
-					async (input) => runTool(gateway, descriptor.id, input as unknown as ToolParams)
+					async (input) => runTool(gateway, descriptor.id, input as unknown as ToolParams, descriptor.supportsWait !== false)
 				);
 				added += 1;
 			} catch (err) {

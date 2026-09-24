@@ -131,3 +131,31 @@ describe("paramsForCommand: проекты окна", () => {
 		assert.deepStrictEqual(keys("1c-platform-tools.project.initialize"), ["projectPath", "wait"]);
 	});
 });
+
+describe("paramsForCommand: стандартный интерфейс OData", () => {
+	it("запрос получает ресурс, метод, адрес, выборку и тело, но не строку подключения", () => {
+		const shape = keys("1c-platform-tools.odata.query");
+		for (const name of ["resource", "method", "url", "filter", "select", "expand", "orderby", "top", "skip", "body", "settingsFile"]) {
+			assert.ok(shape.includes(name), `нет параметра ${name}`);
+		}
+		assert.ok(!shape.includes("ibConnection"), "базу задаёт адрес публикации");
+	});
+
+	it("ресурс обязателен, метод только из поддерживаемых", () => {
+		const shape = paramsForCommand("1c-platform-tools.odata.query");
+		assert.strictEqual(shape.resource.safeParse(undefined).success, false);
+		assert.strictEqual(shape.method.safeParse("PATCH").success, true);
+		assert.strictEqual(shape.method.safeParse("PUT").success, true);
+		assert.strictEqual(shape.method.safeParse("MERGE").success, false);
+		assert.strictEqual(shape.top.safeParse(-1).success, false);
+		assert.strictEqual(shape.body.safeParse('{"Description":"Стол"}').success, true);
+	});
+
+	it("состав получает include, exclude и available вместе с настройками профиля", () => {
+		const shape = keys("1c-platform-tools.odata.setup");
+		for (const name of ["include", "exclude", "available", "settingsFile", "ibConnection"]) {
+			assert.ok(shape.includes(name), `нет параметра ${name}`);
+		}
+		assert.ok(!shape.includes("resource"));
+	});
+});

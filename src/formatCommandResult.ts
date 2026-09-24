@@ -100,6 +100,36 @@ export function clampOutput(text: string): string {
 }
 
 /**
+ * Предел данных команды в ответе (символов).
+ *
+ * Данные - это сам результат (выборка OData, список проектов), поэтому они
+ * режутся с конца, а не с начала, как вывод процесса. Расширение урезает
+ * выборку по записям само, предел страхует от разрастания при форматировании.
+ */
+const DATA_LIMIT = 100_000;
+
+/**
+ * Форматирует данные команды: с отступами, а если так не помещаются - в одну строку.
+ *
+ * @param data — данные команды
+ * @returns текст данных не длиннее предела, с пометкой об обрезке
+ */
+export function formatData(data: unknown): string {
+	if (typeof data === "string") {
+		return data.length <= DATA_LIMIT ? data : `${data.slice(0, DATA_LIMIT)}\n[конец данных пропущен: ${data.length - DATA_LIMIT} символов]`;
+	}
+	const pretty = JSON.stringify(data, null, 2) ?? "";
+	if (pretty.length <= DATA_LIMIT) {
+		return pretty;
+	}
+	const compact = JSON.stringify(data) ?? "";
+	if (compact.length <= DATA_LIMIT) {
+		return compact;
+	}
+	return `${compact.slice(0, DATA_LIMIT)}\n[конец данных пропущен: ${compact.length - DATA_LIMIT} символов]`;
+}
+
+/**
  * Определяет, является ли значение структурированным результатом команды.
  *
  * @param value — произвольное значение
@@ -174,7 +204,7 @@ function formatStructured(r: StructuredCommandResult): string {
 	}
 
 	if (r.data !== undefined && r.data !== null) {
-		lines.push(`\nДанные:\n${JSON.stringify(r.data, null, 2)}`);
+		lines.push(`\nДанные:\n${formatData(r.data)}`);
 	}
 
 	if (r.errors && r.errors.length > 0) {
@@ -223,10 +253,15 @@ export function isFailedResult(result: unknown): boolean {
  * - null/undefined — команда выполнена в UI-терминале без возврата данных.
  *
  * @param result — значение, возвращённое executeCommand
+ * @param returnsOutcome — команда умеет возвращать исход при wait: true
  * @returns читаемая строка для агента
  */
-export function formatCommandResult(result: unknown): string {
+export function formatCommandResult(result: unknown, returnsOutcome = true): string {
 	if (result === undefined || result === null) {
+		if (!returnsOutcome) {
+			// Совет про wait: true такой команде не поможет: исход она не возвращает вовсе
+			return "Команда запущена. Исход операции эта команда не возвращает: проверьте результат отдельным вызовом.";
+		}
 		return "Команда запущена в UI-терминале. Результат выполнения отображается в панели 1C: Platform Tools. Для получения структурированного вывода используйте параметр wait: true.";
 	}
 

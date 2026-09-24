@@ -176,6 +176,53 @@ describe("createMcpServer", () => {
 		await client.close();
 	});
 
+	it("запрос к OData передаёт тело записи и параметры выборки команде", async () => {
+		const gateway = new FakeGateway([
+			{ id: "1c-platform-tools.odata.query", title: "Запрос к OData", category: "1С: OData", supportsWait: true },
+		]);
+		const client = await connect(gateway);
+
+		await client.callTool({
+			name: "odata_query",
+			arguments: { resource: "Catalog_Номенклатура", method: "POST", body: '{"Description":"Стол"}', top: 1 },
+		});
+
+		const flags = (gateway.calls[0].args?.[0] ?? {}) as Record<string, unknown>;
+		assert.strictEqual(gateway.calls[0].commandId, "1c-platform-tools.odata.query");
+		assert.strictEqual(flags.body, '{"Description":"Стол"}');
+		assert.strictEqual(flags.method, "POST");
+		assert.strictEqual(flags.top, 1);
+		await client.close();
+	});
+
+	it("схемы инструментов без конструкций, из-за которых Cursor отбрасывает список", async () => {
+		// Cursor молча не принимает весь tools/list, если в схеме есть propertyNames
+		// (z.record) или maximum 2^53 (int() в Zod 4): агенту остаётся пустой список
+		const client = await connect(new FakeGateway([
+			{ id: "1c-platform-tools.odata.query", supportsWait: true },
+			{ id: "1c-platform-tools.odata.setup", supportsWait: true },
+			...DESCRIPTORS,
+		]));
+		const { tools } = await client.listTools();
+		const schemas = JSON.stringify(tools.map((tool) => tool.inputSchema));
+		assert.ok(!schemas.includes("propertyNames"), "в схеме есть propertyNames");
+		assert.ok(!schemas.includes("9007199254740991"), "в схеме есть maximum 2^53");
+		await client.close();
+	});
+
+	it("команда без исхода не советует wait: true", async () => {
+		const gateway = new FakeGateway(
+			[{ id: "1c-platform-tools.server.start", title: "Запустить", category: "1С: Автономный сервер", supportsWait: false }],
+			null
+		);
+		const client = await connect(gateway);
+		const answer = await client.callTool({ name: "server_start", arguments: {} });
+		const text = (answer.content as Array<{ text: string }>)[0].text;
+		assert.doesNotMatch(text, /wait: true/);
+		assert.match(text, /не возвращает/);
+		await client.close();
+	});
+
 	it("упавшие тесты помечают ответ как неуспешный", async () => {
 		const failing = {
 			success: true,
@@ -328,6 +375,9 @@ describe("createMcpServer: проекты окна", () => {
 			"1c-platform-tools.project.select",
 			"1c-platform-tools.project.initialize",
 			"1c-platform-tools.pipelines.run",
+			"1c-platform-tools.server.start",
+			"1c-platform-tools.odata.query",
+			"1c-platform-tools.odata.setup",
 		].map((id) => commandIdToToolName(id));
 		assert.deepStrictEqual([...new Set(named)].sort(), [...real].sort());
 		await client.close();
