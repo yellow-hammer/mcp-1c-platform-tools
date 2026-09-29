@@ -5,6 +5,26 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/),
 и этот проект придерживается [Semantic Versioning](https://semver.org/lang/ru/).
 
+## [0.3.1] - 2026-09-29
+
+
+### Исправления
+
+- **deps:** Обновили fast-uri и undici до версий без уязвимостей
+
+
+### Прочее
+
+- **deps:** Bump fast-uri in the npm_and_yarn group across 1 directory
+
+
+### Документация
+
+- **project:** Описали вид проекта в ответе project_list
+
+- Указали в описаниях расширения редакторы и форматы проектов
+
+
 ## [0.3.0] - 2026-09-24
 
 
