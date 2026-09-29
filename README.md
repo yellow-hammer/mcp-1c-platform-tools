@@ -6,7 +6,7 @@
 [![telegram chat](resources/badges/telegram-chat.png)](https://t.me/wonder_yellow)
 [![Ask Devin](resources/badges/deepwiki-badge.png)](https://deepwiki.com/yellow-hammer/mcp-1c-platform-tools)
 
-MCP-сервер даёт агенту Cursor или VS Code доступ к командам расширения [1C: Platform Tools](https://marketplace.visualstudio.com/items?itemName=yellow-hammer.1c-platform-tools): тесты, профили запуска, сборка конфигурации, работа с базой.
+MCP-сервер даёт агенту VS Code или Cursor доступ к командам расширения [1C: Platform Tools](https://marketplace.visualstudio.com/items?itemName=yellow-hammer.1c-platform-tools) в проектах конфигуратора, 1С:EDT и OneScript: тесты, профили запуска, сборка конфигурации, работа с базой.
 
 ## Установка
 

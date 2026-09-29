@@ -1,7 +1,7 @@
 {
   "name": "mcp-1c-platform-tools",
   "displayName": "1C: Platform Tools MCP",
-  "description": "MCP-сервер для запуска команд 1c-platform-tools через агентов Cursor/VS Code",
+  "description": "MCP-сервер расширения 1C: Platform Tools для AI-агентов VS Code и Cursor: тесты, сборка, профили запуска и работа с базой в проектах конфигуратора, 1С:EDT и OneScript.",
   "keywords": [
     "1c",
     "1с",
@@ -11,6 +11,9 @@
     "bsl",
     "mcp",
     "cursor",
+    "vscode",
+    "edt",
+    "onescript",
     "1c platform tools"
   ],
   "version": "0.3.0",
