@@ -67,6 +67,13 @@ const profileShape = {
 		.describe("Профиль запуска: идентификатор (dev), имя файла настроек (env.dev.json) или подпись"),
 } as const;
 
+const environmentShape = {
+	environment: z
+		.string()
+		.optional()
+		.describe("Окружение запуска: имя (sqlite) или файл (.env.sqlite); пустая строка - без окружения, только общий .env"),
+} as const;
+
 const frameworksShape = {
 	frameworks: z
 		.array(z.string())
@@ -365,6 +372,9 @@ export function paramsForCommand(commandId: string): ToolParamsShape {
 	}
 	if (commandId === "1c-platform-tools.env.selectProfile") {
 		Object.assign(shape, profileShape);
+	}
+	if (commandId === "1c-platform-tools.env.selectEnvironment") {
+		Object.assign(shape, environmentShape);
 	}
 	if (commandId === "1c-platform-tools.test.configure") {
 		Object.assign(shape, frameworksShape);
