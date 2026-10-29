@@ -5,20 +5,21 @@ alwaysApply: true
 
 # Контекст проекта
 
-Расширение VS Code, которое предоставляет **MCP-сервер** (Model Context Protocol), чтобы агенты Cursor/VS Code могли вызывать команды 1c-platform-tools по IPC. Зависит от **yellow-hammer.1c-platform-tools**; расширение должно быть установлено, IPC включён (`1c-platform-tools.ipc.enabled`).
+Расширение VS Code, которое предоставляет **MCP-сервер** (Model Context Protocol), чтобы агенты VS Code и Cursor могли вызывать команды 1c-platform-tools по каналу окна. Зависит от **yellow-hammer.1c-platform-tools** той версии, что ведёт реестр окон: каждое окно открывает свой канал (именованный канал Windows или Unix-сокет с токеном) и пишет запись в `~/.1c-platform-tools/windows/<id>.json`. Формат записи задаёт 1c-platform-tools (`src/shared/windowRegistry.ts`), образец — `test/fixtures/window-record.json`; при смене формата правятся оба репозитория.
 
 ## Архитектура
 
-- **Точка входа**: `src/extension.ts` регистрирует определение MCP-сервера и передаёт настройки IPC (порт, токен) через переменные окружения; процесс MCP запускает хост (Cursor/VS Code), выполняется `out/index.js` (Node).
-- **MCP-сервер (standalone)**: `src/index.ts` — создаёт McpServer (версия из package.json), получает список команд расширения по IPC (`listCommands()`), регистрирует один инструмент на команду. Транспорт: stdio.
-- **IPC-клиент**: `src/ipcClient.ts` — TCP-клиент к IPC-серверу расширения (хост/порт из env или по умолчанию). Методы: `listCommands()`, `executeCommand(commandId, args, projectPath)`.
+- **Точка входа**: `src/extension.ts` регистрирует определение MCP-сервера; в `resolveMcpServerDefinition` берёт окно из API 1c-platform-tools (`getMcpWindow`, проверка — `src/platformToolsApi.ts`) и передаёт его переменной `MCP_1C_WINDOW`. Без этого API — понятная ошибка, отката на другие каналы нет. Команда «Настроить MCP для Cursor» пишет `.cursor/mcp.json` с путём к серверу (`src/agentConfig.ts`). Сервер находит окно по каталогу запуска. Процесс MCP запускает клиент, выполняется `out/src/index.js` (Node).
+- **MCP-сервер (standalone)**: `src/index.ts` — создаёт McpServer (версия из package.json), получает список команд окна (`listCommands`), регистрирует один инструмент на команду. Транспорт: stdio.
+- **Выбор окна**: `src/windowRegistry.ts` читает реестр (живые окна этой версии формата), `src/windowChoice.ts` выбирает окно: `MCP_1C_WINDOW`, затем окно каталога, из которого запущен сервер, агенту вне окон — по `projectPath`; иначе отказ с кодом (`WINDOW_NOT_FOUND`, `WINDOW_AMBIGUOUS`, `WINDOW_CLOSED`, `PROJECT_PATH_REQUIRED`, `VERSION_MISMATCH`). `src/windowGateway.ts` выбирает окно на каждый вызов и дополняет `WORKSPACE_MISMATCH` окном, где открыт проект.
+- **Клиент канала**: `src/channelClient.ts` — клиент канала окна (путь и токен из реестра). Методы: `listCommandDescriptors()`, `executeCommand(commandId, args, projectPath)`; отказ расширения — `ChannelError` с кодом.
 - **Имена инструментов**: `src/toolName.ts` — `commandIdToToolName(commandId)` преобразует command ID расширения (например `1c-platform-tools.configuration.loadFromSrc`) в имена MCP-инструментов с сокращениями так, чтобы **суммарная длина «имя сервера + имя инструмента» не превышала 60 символов** (ограничение платформы). Допустимые сокращения (1Cpt, 1cpt) и правило 60 символов — в `.cursor/rules/naming-abbreviations.mdc`.
 - **Логирование**: `src/logger.ts` — собственный `LogOutputChannel` расширения (канал «1C: Platform Tools MCP»; уровень, таймстемп и фильтрацию задаёт VS Code); `src/loggerServer.ts` — вывод в stderr для standalone-процесса MCP (уровень из env `MCP_1C_LOG_LEVEL`).
 - **Иконка**: `resources/1c-icon.png` — иконка расширения, указывается в package.json.
 
 ## Динамическая регистрация инструментов
 
-Инструменты **не** захардкожены. При старте MCP-сервер вызывает `ipcClient.listCommands()`, получает список command ID от расширения (IPC-метод `listCommands`). Для каждого ID регистрирует `server.tool(toolName, baseParamsShape, handler)`. Имя инструмента вычисляется из commandId через `commandIdToToolName()`. Добавление новой команды в 1c-platform-tools (и её отдача в listCommands) автоматически добавляет новый MCP-инструмент; в mcp-1c-platform-tools менять ничего не нужно, кроме возможного обновления сокращений в toolName.ts при превышении лимита длины.
+Инструменты **не** захардкожены. При старте MCP-сервер вызывает `listCommandDescriptors()` и на каждое описание регистрирует инструмент. Имя считается из command ID через `commandIdToToolName()`. Новая команда 1c-platform-tools, отданная в `listCommands`, появляется в MCP сама.
 
 ## Параметры
 
@@ -26,7 +27,7 @@ alwaysApply: true
 
 ## Когда расширение недоступно
 
-Если `listCommands` не удаётся (расширение не запущено, IPC выключен, таймаут), сервер регистрирует один инструмент (например `onec_platform_tools_status`) с сообщением, что нужно открыть проект 1С и включить IPC в настройках 1c-platform-tools.
+Если `listCommands` не удаётся (окна нет, окно закрыто, таймаут), сервер регистрирует один инструмент `onec_platform_tools_status` с причиной отказа. Вызов повторяет подключение и добавляет инструменты, когда окно появилось.
 
 ## Ключевые соглашения
 

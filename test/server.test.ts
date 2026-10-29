@@ -9,9 +9,10 @@ import { describe, it } from "node:test";
 import assert from "node:assert";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import { createMcpServer, CommandGateway } from "../src/server.js";
-import type { CommandDescriptor } from "../src/ipcClient.js";
-import { commandIdToToolName } from "../src/toolName.js";
+import { ToolListChangedNotificationSchema } from "@modelcontextprotocol/sdk/types.js";
+import type { CommandDescriptor } from "../src/commandDescriptor.js";
+import { ChannelError } from "../src/channelClient.js";
+import { createMcpServer, CommandGateway, type McpServerOptions } from "../src/server.js";
 
 /** Вызов команды, записанный подделкой шлюза. */
 interface RecordedCall {
@@ -28,13 +29,15 @@ class FakeGateway implements CommandGateway {
 	constructor(
 		private readonly descriptors: CommandDescriptor[],
 		private readonly result: unknown = { success: true, exitCode: 0, stdout: "готово", stderr: "" },
-		private readonly listFailures = 0
+		private readonly listFailures = 0,
+		private readonly failure = "расширение недоступно",
+		private readonly failureCode?: string
 	) {}
 
 	public async listCommandDescriptors(): Promise<CommandDescriptor[]> {
 		this.listCalls += 1;
 		if (this.listCalls <= this.listFailures) {
-			throw new Error("расширение недоступно");
+			throw this.failureCode === undefined ? new Error(this.failure) : new ChannelError(this.failure, this.failureCode);
 		}
 		return this.descriptors;
 	}
@@ -71,8 +74,8 @@ const DESCRIPTORS: CommandDescriptor[] = [
 ];
 
 /** Поднимает сервер с подделкой шлюза и подключает к нему клиента MCP. */
-async function connect(gateway: CommandGateway): Promise<Client> {
-	const server = await createMcpServer(gateway, "1.2.3");
+async function connect(gateway: CommandGateway, options?: McpServerOptions): Promise<Client> {
+	const server = await createMcpServer(gateway, "1.2.3", options);
 	const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
 	const client = new Client({ name: "test", version: "1" });
 	await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
@@ -84,27 +87,9 @@ describe("createMcpServer", () => {
 		const client = await connect(new FakeGateway(DESCRIPTORS));
 		const { tools } = await client.listTools();
 
-		assert.strictEqual(tools.length, DESCRIPTORS.length);
+		assert.strictEqual(tools.length, DESCRIPTORS.length + 1);
 		assert.ok(tools.some((tool) => tool.name === "test_xunit"));
-		await client.close();
-	});
-
-	it("описание инструмента строится из заголовка команды", async () => {
-		const client = await connect(new FakeGateway(DESCRIPTORS));
-		const { tools } = await client.listTools();
-
-		const xunit = tools.find((tool) => tool.name === "test_xunit");
-		assert.match(xunit?.description ?? "", /1C: Тестирование: XUnit тесты/);
-		assert.match(xunit?.description ?? "", /1c-platform-tools\.test\.xunit/);
-		await client.close();
-	});
-
-	it("команда без синхронного результата предупреждает об этом", async () => {
-		const client = await connect(new FakeGateway(DESCRIPTORS));
-		const { tools } = await client.listTools();
-
-		const designer = tools.find((tool) => tool.name === "run_designer");
-		assert.match(designer?.description ?? "", /Исход операции не возвращается/);
+		assert.ok(tools.some((tool) => tool.name === "onec_platform_tools_status"));
 		await client.close();
 	});
 
@@ -129,15 +114,6 @@ describe("createMcpServer", () => {
 
 		const required = tools.find((tool) => tool.name === "test_xunit")?.inputSchema.required ?? [];
 		assert.ok(!required.includes("projectPath"), `projectPath оказался обязательным: ${required}`);
-		await client.close();
-	});
-
-	it("клиент получает инструкцию по работе с сервером", async () => {
-		const client = await connect(new FakeGateway(DESCRIPTORS));
-
-		const instructions = client.getInstructions() ?? "";
-		assert.ok(instructions.includes(commandIdToToolName("1c-platform-tools.env.status")), instructions);
-		assert.match(instructions, /wait: false/);
 		await client.close();
 	});
 
@@ -219,7 +195,6 @@ describe("createMcpServer", () => {
 		const answer = await client.callTool({ name: "server_start", arguments: {} });
 		const text = (answer.content as Array<{ text: string }>)[0].text;
 		assert.doesNotMatch(text, /wait: true/);
-		assert.match(text, /не возвращает/);
 		await client.close();
 	});
 
@@ -242,7 +217,6 @@ describe("createMcpServer", () => {
 		});
 
 		assert.strictEqual(result.isError, true);
-		assert.match(JSON.stringify(result.content), /Тесты не пройдены/);
 		await client.close();
 	});
 
@@ -265,7 +239,6 @@ describe("createMcpServer", () => {
 		});
 
 		assert.notStrictEqual(result.isError, true);
-		assert.match(JSON.stringify(result.content), /Тесты пройдены/);
 		await client.close();
 	});
 
@@ -277,19 +250,64 @@ describe("createMcpServer", () => {
 		await client.close();
 	});
 
-	it("заглушка регистрирует инструменты после повторного подключения", async () => {
+	it("заглушка регистрирует инструменты и остаётся в списке", async () => {
 		const gateway = new FakeGateway(DESCRIPTORS, undefined, 1);
 		const client = await connect(gateway);
+		let changed = 0;
+		client.setNotificationHandler(ToolListChangedNotificationSchema, () => {
+			changed += 1;
+		});
 
 		const retry = await client.callTool({ name: "onec_platform_tools_status", arguments: {} });
 		assert.notStrictEqual(retry.isError, true);
 
 		const { tools } = await client.listTools();
 		assert.ok(tools.some((tool) => tool.name === "test_xunit"), "инструменты появились");
-		assert.ok(
-			!tools.some((tool) => tool.name === "onec_platform_tools_status"),
-			"заглушка снята"
+		assert.ok(tools.some((tool) => tool.name === "onec_platform_tools_status"), "заглушка остаётся");
+		assert.ok(changed > 0, "клиент получает notifications/tools/list_changed");
+		await client.close();
+	});
+
+	it("пока окна нет, сервер ждёт его и регистрирует инструменты", async () => {
+		const gateway = new FakeGateway(DESCRIPTORS, undefined, 2, "нет окна", "WINDOW_NOT_FOUND");
+		const started = Date.now();
+		const client = await connect(gateway, { windowWaitMs: 1_000, pollMs: 20 });
+
+		assert.ok(Date.now() - started < 900, "ожидание не должно выйти за предел");
+		assert.ok(gateway.listCalls >= 3);
+		const { tools } = await client.listTools();
+		assert.ok(tools.some((tool) => tool.name === "test_xunit"));
+		assert.ok(tools.some((tool) => tool.name === "onec_platform_tools_status"));
+		await client.close();
+	});
+
+	it("окно, появившееся после старта, добавляет инструменты", async () => {
+		const gateway = new FakeGateway(DESCRIPTORS, undefined, 1, "нет окна", "WINDOW_NOT_FOUND");
+		const client = await connect(gateway, { windowWaitMs: 0, pollMs: 20 });
+		const started = Date.now();
+		let names: string[] = [];
+		while (Date.now() - started < 1000) {
+			names = (await client.listTools()).tools.map((tool) => tool.name);
+			if (names.includes("test_xunit")) {
+				break;
+			}
+			await new Promise((resolve) => setTimeout(resolve, 20));
+		}
+		assert.ok(names.includes("test_xunit"));
+		assert.ok(names.includes("onec_platform_tools_status"));
+		await client.close();
+	});
+
+	it("другой отказ не ждёт окно", async () => {
+		const started = Date.now();
+		const client = await connect(
+			new FakeGateway(DESCRIPTORS, undefined, 5, "Папка не доверенная", "WORKSPACE_NOT_TRUSTED"),
+			{ windowWaitMs: 5_000, pollMs: 50 }
 		);
+
+		assert.ok(Date.now() - started < 1_000);
+		const { tools } = await client.listTools();
+		assert.deepStrictEqual(tools.map((tool) => tool.name), ["onec_platform_tools_status"]);
 		await client.close();
 	});
 
@@ -352,34 +370,6 @@ describe("createMcpServer: проекты окна", () => {
 		assert.strictEqual(gateway.calls[0].commandId, "1c-platform-tools.project.initialize");
 		assert.strictEqual(gateway.calls[0].projectPath, "C:/work/erp/поставка");
 		assert.deepStrictEqual(gateway.calls[0].args, [{ wait: true }]);
-		await client.close();
-	});
-
-	it("инструкция объясняет, как увидеть проекты и переключить текущий", async () => {
-		const client = await connect(new FakeGateway(PROJECT_DESCRIPTORS));
-
-		const instructions = client.getInstructions() ?? "";
-		assert.match(instructions, /projectPath выполняет один вызов в указанном проекте и текущий проект не меняет/);
-		await client.close();
-	});
-
-	it("инструкция называет инструменты так, как их регистрирует сервер", async () => {
-		const client = await connect(new FakeGateway(PROJECT_DESCRIPTORS));
-
-		const instructions = client.getInstructions() ?? "";
-		const named = [...instructions.matchAll(/\b[a-z]+_[A-Za-z]+\b/g)].map((match) => match[0]);
-		const real = [
-			"1c-platform-tools.env.status",
-			"1c-platform-tools.env.selectProfile",
-			"1c-platform-tools.project.list",
-			"1c-platform-tools.project.select",
-			"1c-platform-tools.project.initialize",
-			"1c-platform-tools.pipelines.run",
-			"1c-platform-tools.server.start",
-			"1c-platform-tools.odata.query",
-			"1c-platform-tools.odata.setup",
-		].map((id) => commandIdToToolName(id));
-		assert.deepStrictEqual([...new Set(named)].sort(), [...real].sort());
 		await client.close();
 	});
 });

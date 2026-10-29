@@ -1,0 +1,15 @@
+{
+	"version": 1,
+	"id": "5f0c6a3e9b2d4c71a8e0f3b6d2c1e4a7",
+	"pid": 4242,
+	"hostname": "dev-host",
+	"app": "Visual Studio Code",
+	"name": "erp (Рабочая область)",
+	"pipe": "/tmp/1cpt-Ab12Cd/channel.sock",
+	"token": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+	"trusted": true,
+	"folders": ["/home/dev/erp", "/home/dev/retail"],
+	"projects": ["/home/dev/erp", "/home/dev/erp/extensions/delivery", "/home/dev/retail"],
+	"currentProject": "/home/dev/erp",
+	"updatedAt": "2026-10-28T09:00:00.000Z"
+}

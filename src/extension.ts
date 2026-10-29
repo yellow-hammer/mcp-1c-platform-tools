@@ -1,14 +1,23 @@
 /**
- * Точка входа расширения VS Code: регистрирует MCP-сервер 1C Platform Tools (stdio).
- * Настройки IPC (порт, токен) передаются в процесс MCP через переменные окружения.
+ * Точка входа расширения VS Code: регистрирует MCP-сервер 1C Platform Tools (stdio)
+ * и передаёт ему окно, из которого он запущен.
  */
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as vscode from "vscode";
 import { logger } from "./logger.js";
-import { writeCursorConfig, CursorServerConfig } from "./cursorConfig.js";
+import { notifyQuiet } from "./notify.js";
+import { CLAUDE_CODE, CURSOR, writeAgentConfig, type AgentConfigTarget } from "./agentConfig.js";
+import { hasMcpWindow, type PlatformToolsApi } from "./platformToolsApi.js";
 
 const MCP_PROVIDER_ID = "mcp-1c-platform-tools";
+
+/** Расширение, к командам которого сервер даёт доступ. */
+const PLATFORM_TOOLS_ID = "yellow-hammer.1c-platform-tools";
+
+/** Отказ, когда 1C: Platform Tools не даёт окно MCP-серверу. */
+const PLATFORM_TOOLS_OUTDATED =
+	"Обновите 1C: Platform Tools до последней версии: с этой версией MCP-сервер не подключится к окну.";
 
 /**
  * Активирует расширение: регистрирует провайдер определений MCP-сервера и подписывается на очистку логгера.
@@ -29,135 +38,130 @@ export function activate(context: vscode.ExtensionContext): void {
 	);
 	(server as { cwd?: vscode.Uri }).cwd = vscode.Uri.file(context.extensionPath);
 
+	const provider: vscode.McpServerDefinitionProvider<vscode.McpStdioServerDefinition> = {
+		provideMcpServerDefinitions: async () => [server],
+		resolveMcpServerDefinition: async (definition) => bindToWindow(definition),
+	};
+
 	context.subscriptions.push(
-		vscode.lm.registerMcpServerDefinitionProvider(MCP_PROVIDER_ID, {
-			provideMcpServerDefinitions: async () => [server],
-		}),
+		vscode.lm.registerMcpServerDefinitionProvider(MCP_PROVIDER_ID, provider),
 		vscode.commands.registerCommand("mcp-1c-platform-tools.configureCursor", () =>
-			configureCursor(serverPath, false)
+			configureAgent(CURSOR, serverPath, false)
 		),
 		{ dispose: () => logger.dispose() }
 	);
 	logger.info("1C: Platform Tools MCP: провайдер зарегистрирован");
 
 	// Путь к серверу содержит версию расширения: после обновления запись в
-	// .cursor/mcp.json указывает на несуществующий каталог — чиним молча
-	void configureCursor(serverPath, true);
-	void offerIpc();
+	// конфиге клиента указывает на несуществующий каталог — чиним молча
+	void configureAgent(CURSOR, serverPath, true);
+	void configureAgent(CLAUDE_CODE, serverPath, true);
+	void checkPlatformTools();
 }
 
 /**
- * Предлагает включить IPC, без которого сервер не видит расширение 1c-platform-tools.
+ * API 1C: Platform Tools с окном для MCP-сервера.
  *
- * Настройка чужая, поэтому при обычном запуске её не меняем молча: показываем
- * предложение с кнопкой.
+ * @returns API либо undefined, если у расширения такого API нет
  */
-async function offerIpc(): Promise<void> {
-	if (isIpcEnabled()) {
-		return;
+async function platformToolsApi(): Promise<PlatformToolsApi | undefined> {
+	const extension = vscode.extensions.getExtension(PLATFORM_TOOLS_ID);
+	if (!extension) {
+		return undefined;
 	}
-	const enable = "Включить";
-	const answer = await vscode.window.showInformationMessage(
-		"MCP-серверу нужен IPC расширения 1c-platform-tools: без него инструменты недоступны.",
-		enable
-	);
-	if (answer === enable) {
-		await enableIpc();
-	}
-}
-
-/**
- * Проверяет, включён ли IPC расширения 1c-platform-tools.
- *
- * @returns true, если настройка включена
- */
-function isIpcEnabled(): boolean {
-	return vscode.workspace.getConfiguration("1c-platform-tools").get<boolean>("ipc.enabled") === true;
-}
-
-/**
- * Включает IPC расширения 1c-platform-tools.
- *
- * @returns true, если настройка включена или уже была включена
- */
-async function enableIpc(): Promise<boolean> {
 	try {
-		await vscode.workspace
-			.getConfiguration("1c-platform-tools")
-			.update("ipc.enabled", true, vscode.ConfigurationTarget.Global);
-		logger.info("Включена настройка 1c-platform-tools.ipc.enabled");
-		return true;
+		const api: unknown = await extension.activate();
+		return hasMcpWindow(api) ? api : undefined;
 	} catch (err) {
 		const message = err instanceof Error ? err.message : String(err);
-		logger.warn(`Не удалось включить 1c-platform-tools.ipc.enabled: ${message}`);
-		void vscode.window.showWarningMessage(
-			"Не удалось включить 1c-platform-tools.ipc.enabled. Проверьте, что расширение 1c-platform-tools установлено."
-		);
-		return false;
+		logger.warn(`1C: Platform Tools не активировалось: ${message}`);
+		return undefined;
 	}
 }
 
 /**
- * Параметры IPC из настроек расширения 1c-platform-tools.
- *
- * @returns Порт и токен для передачи серверу
+ * Сообщает, если 1C: Platform Tools не даёт окно MCP-серверу.
  */
-function readIpcSettings(): { port: number; token: string } {
-	const config = vscode.workspace.getConfiguration("1c-platform-tools");
-	return {
-		port: config.get<number>("ipc.port", 40241),
-		token: config.get<string>("ipc.token") ?? "",
-	};
+async function checkPlatformTools(): Promise<void> {
+	if (await platformToolsApi()) {
+		return;
+	}
+	logger.warn(PLATFORM_TOOLS_OUTDATED);
+	const open = "Открыть расширение";
+	if ((await vscode.window.showWarningMessage(PLATFORM_TOOLS_OUTDATED, open)) === open) {
+		await vscode.commands.executeCommand("workbench.extensions.search", PLATFORM_TOOLS_ID);
+	}
 }
 
 /**
- * Записывает конфиг MCP для Cursor в открытые проекты.
+ * Передаёт запускаемому MCP-серверу окно, из которого он запущен.
  *
- * @param serverPath — путь к запускаемому файлу сервера
- * @param onlyIfStale — только починка устаревшего пути, без создания файла
+ * @param definition — определение сервера от провайдера
+ * @returns определение с окном в MCP_1C_WINDOW
+ * @throws если окно недоступно: текст ошибки редактор показывает вместо
+ *   молча остановленного сервера
  */
-async function configureCursor(serverPath: string, onlyIfStale: boolean): Promise<void> {
-	const folders = vscode.workspace.workspaceFolders ?? [];
+async function bindToWindow(
+	definition: vscode.McpStdioServerDefinition
+): Promise<vscode.McpStdioServerDefinition> {
+	const api = await platformToolsApi();
+	if (!api) {
+		throw new Error(PLATFORM_TOOLS_OUTDATED);
+	}
+	const windowId = await api.getMcpWindow();
+	if (!windowId) {
+		const message = vscode.workspace.isTrusted
+			? "Окно не подключено к MCP-серверу, причина в журнале 1C: Platform Tools. Перезапустите MCP-сервер."
+			: "Папка не доверенная: агент с ней не работает. Подтвердите доверие папке и перезапустите MCP-сервер.";
+		logger.warn(message);
+		throw new Error(message);
+	}
+	const resolved = new vscode.McpStdioServerDefinition(
+		definition.label,
+		definition.command,
+		definition.args,
+		{ ...definition.env, MCP_1C_WINDOW: windowId },
+		definition.version
+	);
+	resolved.cwd = definition.cwd;
+	return resolved;
+}
+
+/**
+ * Записывает конфиг MCP клиента в открытые папки.
+ *
+ * @param target — клиент MCP
+ * @param serverPath — путь к запускаемому файлу сервера
+ * @param onlyIfStale — только починка устаревшей записи, без создания файла
+ */
+async function configureAgent(target: AgentConfigTarget, serverPath: string, onlyIfStale: boolean): Promise<void> {
+	const folders = (vscode.workspace.workspaceFolders ?? []).filter((folder) => folder.uri.scheme === "file");
 	if (folders.length === 0) {
 		if (!onlyIfStale) {
 			void vscode.window.showWarningMessage(
-				"Откройте проект 1С: конфиг записывается в .cursor/mcp.json проекта."
+				`Откройте проект 1С: конфиг записывается в ${target.file} проекта.`
 			);
 		}
 		return;
 	}
 
-	// Настройку MCP запросил сам пользователь: IPC входит в неё, отдельного
-	// вопроса не задаём
-	if (!onlyIfStale && !isIpcEnabled()) {
-		await enableIpc();
-	}
-
-	const { port, token } = readIpcSettings();
-	const config: CursorServerConfig = { serverPath, port, token };
-
 	for (const folder of folders) {
+		const file = `${folder.name}/${target.file.replaceAll("\\", "/")}`;
 		try {
-			const outcome = await writeCursorConfig(folder.uri.fsPath, config, onlyIfStale);
+			const outcome = await writeAgentConfig(target, { serverPath, workspace: folder.uri.fsPath }, onlyIfStale);
 			if (outcome === "unchanged") {
 				continue;
 			}
-			logger.info(`Конфиг Cursor ${outcome === "created" ? "создан" : "обновлён"}: ${folder.name}`);
-			if (!onlyIfStale) {
-				void vscode.window.showInformationMessage(
-					`Конфиг MCP для Cursor записан в ${folder.name}/.cursor/mcp.json. ` +
-					"Перезагрузите окно, а затем включите сервер mcp-1c-platform-tools в настройках MCP: новый сервер Cursor добавляет выключенным."
-				);
-			} else {
-				void vscode.window.showInformationMessage(
-					`Путь к MCP-серверу в ${folder.name}/.cursor/mcp.json обновлён после обновления расширения. Перезагрузите окно.`
-				);
-			}
+			const done = onlyIfStale
+				? `Обновлена запись MCP-сервера в ${file}`
+				: `Конфиг MCP для ${target.label} записан в ${file}`;
+			notifyQuiet(done);
+			logger.info(onlyIfStale ? target.afterUpdate : target.afterCreate);
 		} catch (err) {
 			const message = err instanceof Error ? err.message : String(err);
-			logger.error(`Не удалось записать конфиг Cursor (${folder.name}): ${message}`);
+			logger.error(`Не удалось записать конфиг ${target.label} (${file}): ${message}`);
 			if (!onlyIfStale) {
-				void vscode.window.showErrorMessage(`Не удалось записать .cursor/mcp.json: ${message}`);
+				void vscode.window.showErrorMessage(`Не удалось записать ${target.file}: ${message}`);
 			}
 		}
 	}

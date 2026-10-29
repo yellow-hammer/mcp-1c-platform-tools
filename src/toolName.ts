@@ -1,4 +1,4 @@
-import type { CommandDescriptor } from "./ipcClient.js";
+import type { CommandDescriptor } from "./commandDescriptor.js";
 
 /**
  * Формирование имён MCP-инструментов из commandId с учётом лимита длины (60 символов).

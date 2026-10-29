@@ -4,8 +4,7 @@
       "command": "npx",
       "args": ["-y", "tsx", "../mcp-1c-platform-tools/src/index.ts"],
       "env": {
-        "ONEC_IPC_HOST": "127.0.0.1",
-        "ONEC_IPC_PORT": "40241"
+        "MCP_1C_WORKSPACE": "C:/work/ssl_3_1"
       }
     }
   }

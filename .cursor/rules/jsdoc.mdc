@@ -39,13 +39,13 @@ export function commandIdToToolName(commandId: string): string { ... }
 ```
 
 ```ts
-/** Настройки подключения к IPC-серверу (хост, порт, токен, таймаут). */
-export interface IpcClientConfig { ... }
+/** Настройки подключения к каналу окна. */
+export interface ChannelClientConfig { ... }
 ```
 
 ```ts
 /**
- * Выполняет JSON-RPC запрос к IPC-серверу.
+ * Выполняет JSON-RPC запрос к каналу окна.
  *
  * @param method — имя метода (например listCommands, executeCommand)
  * @param params — опциональные параметры
