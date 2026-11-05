@@ -5,6 +5,24 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/),
 и этот проект придерживается [Semantic Versioning](https://semver.org/lang/ru/).
 
+## [0.5.0] - 2026-11-05
+
+
+### Новые возможности
+
+- **ipc:** Сервер вызывает команды в окне, где открыт проект
+
+
+### Прочее
+
+- **deps:** Bump @azure/msal-node
+
+
+### Документация
+
+- **mcp:** Описали, какой packagedef создаёт project_init
+
+
 ## [0.3.2] - 2026-10-25
 
 
