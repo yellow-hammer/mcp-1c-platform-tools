@@ -175,3 +175,13 @@ describe("paramsForCommand: стандартный интерфейс OData", ()
 		assert.ok(!shape.includes("resource"));
 	});
 });
+
+describe("paramsForCommand: каталоги расширений из базы", () => {
+	it("extensions описывает выбор, как у остальных команд расширений", () => {
+		const init = paramsForCommand("1c-platform-tools.cfe.initializeFromIb").extensions.description ?? "";
+		const dump = paramsForCommand("1c-platform-tools.cfe.dump").extensions.description ?? "";
+		assert.match(init, /в базе/);
+		assert.match(init, /сохранённый выбор/);
+		assert.match(dump, /сохранённый выбор/);
+	});
+});
