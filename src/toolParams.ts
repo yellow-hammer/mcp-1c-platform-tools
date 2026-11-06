@@ -60,6 +60,14 @@ const extensionsShape = {
 		.describe("Расширения: имя каталога, путь от корня рабочей области или имя из метаданных. Без параметра берётся сохранённый выбор проекта"),
 } as const;
 
+/** Каталоги расширений из базы: тот же выбор, что у остальных команд расширений. */
+const initializeExtensionsShape = {
+	extensions: z
+		.array(z.string())
+		.optional()
+		.describe("Имена расширений в базе. Без параметра берётся сохранённый выбор проекта"),
+} as const;
+
 const profileShape = {
 	profile: z
 		.string()
@@ -378,7 +386,9 @@ export function paramsForCommand(commandId: string): ToolParamsShape {
 	if (OUTPUT_COMMANDS.includes(commandId)) {
 		Object.assign(shape, outputShape);
 	}
-	if (
+	if (commandId === "1c-platform-tools.cfe.initializeFromIb") {
+		Object.assign(shape, initializeExtensionsShape);
+	} else if (
 		commandId.startsWith("1c-platform-tools.cfe.") ||
 		TEST_EXTENSION_COMMANDS.includes(commandId)
 	) {
