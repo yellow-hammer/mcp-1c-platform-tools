@@ -16,7 +16,7 @@
     "onescript",
     "1c platform tools"
   ],
-  "version": "0.5.1",
+  "version": "0.5.2",
   "publisher": "yellow-hammer",
   "main": "./out/src/extension.js",
   "engines": {
