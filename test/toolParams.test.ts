@@ -118,6 +118,15 @@ describe("paramsForCommand: сеансы и цепочки", () => {
 		assert.ok(!list.includes("keepSessionsUnlocked"), "список ничего не завершает");
 	});
 
+	it("обновление зависимостей требует цель и не принимает настройки прогона", () => {
+		const shape = paramsForCommand("1c-platform-tools.dependencies.upgrade");
+		assert.ok("dependencyTarget" in shape, "агенту нечем выбрать цель обновления");
+		assert.ok("packageName" in shape, "нечем ограничить один пакет");
+		assert.ok(!("settingsFile" in shape), "настройки vanessa-runner установке зависимостей не задаются");
+		assert.strictEqual(shape.dependencyTarget.safeParse("patch").success, true);
+		assert.strictEqual(shape.dependencyTarget.safeParse("nightly").success, false);
+	});
+
 	it("запуск цепочки требует идентификатор пайплайна", () => {
 		const shape = paramsForCommand("1c-platform-tools.pipelines.run");
 		assert.ok("pipeline" in shape, "агенту нечем выбрать цепочку");

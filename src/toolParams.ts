@@ -170,6 +170,20 @@ const sessionListShape = {
 		.describe("Дополнительно показать соединения информационной базы, включая зависшие без сеанса"),
 } as const;
 
+/** Запись более новых минимумов зависимостей в packagedef. Пакеты не ставит. */
+const upgradeShape = {
+	dependencyTarget: z
+		.enum(["latest", "minor", "patch"])
+		.describe(
+			"Какие версии записать в packagedef: latest, minor или patch. " +
+			"Без параметра команда не выполняется. Пакеты не ставит, после неё нужна установка зависимостей"
+		),
+	packageName: z
+		.string()
+		.optional()
+		.describe("Ограничить обновление минимума одним пакетом"),
+} as const;
+
 /** Запуск цепочки шагов из .1cpt/pipelines.json. */
 const pipelineShape = {
 	pipeline: z
@@ -421,6 +435,9 @@ export function paramsForCommand(commandId: string): ToolParamsShape {
 	}
 	if (commandId === "1c-platform-tools.pipelines.run") {
 		Object.assign(shape, pipelineShape);
+	}
+	if (commandId === "1c-platform-tools.dependencies.upgrade") {
+		Object.assign(shape, upgradeShape);
 	}
 	if (commandId === ODATA_SETUP_COMMAND) {
 		Object.assign(shape, odataSetupShape);

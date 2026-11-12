@@ -15,6 +15,8 @@
 | `environment` | Окружение: какое выбрать в `env_selectEnvironment`, на какой прогон — в `pipelines_run`. Имя (`ci`) или файл (`.env.ci`), пустая строка — «По умолчанию» |
 | `pipeline` | Идентификатор или название цепочки для `pipelines_run` |
 | `frameworks` | Включаемые тестовые фреймворки для `test_configure` (vanessa, xunit, yaxunit, onescript, onebdd) |
+| `dependencyTarget` | Какие минимумы записать в packagedef командой `deps_upgrade`: `latest`, `minor` или `patch`. Пакеты не ставит |
+| `packageName` | Ограничить `deps_upgrade` одним пакетом |
 | `execute`, `command` | Путь к EPF/ERF и строка `/C` для `epf_run` |
 | `outputDirectory` | Каталог результата сборки и выгрузки в файл: `cf_compile`, `cf_unload`, `cf_makeDist`, `cfe_compile`, `cfe_unload`, `epf_compileProc`, `epf_compileReport`. Относительно `projectPath` или абсолютный |
 | `outputName` | Имя файла без расширения для тех же инструментов. Переменные `${name}`, `${folder}`, `${version}`, `${gitBranch}` подставляются и в `outputDirectory` |
