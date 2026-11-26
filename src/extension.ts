@@ -11,6 +11,7 @@ import { CLAUDE_CODE, CURSOR, writeAgentConfig, type AgentConfigTarget } from ".
 import { hasMcpWindow, type PlatformToolsApi } from "./platformToolsApi.js";
 
 const MCP_PROVIDER_ID = "mcp-1c-platform-tools";
+const MCP_WINDOW_RETRY_MS = 5_000;
 
 /** Расширение, к командам которого сервер даёт доступ. */
 const PLATFORM_TOOLS_ID = "yellow-hammer.1c-platform-tools";
@@ -29,22 +30,8 @@ export function activate(context: vscode.ExtensionContext): void {
 	const version = pkg.version;
 
 	const serverPath = path.join(context.extensionPath, "out", "src", "index.js");
-	const server = new vscode.McpStdioServerDefinition(
-		"mcp-1c-platform-tools",
-		"node",
-		[serverPath],
-		{ MCP_1C_SERVER_VERSION: version },
-		version
-	);
-	(server as { cwd?: vscode.Uri }).cwd = vscode.Uri.file(context.extensionPath);
-
-	const provider: vscode.McpServerDefinitionProvider<vscode.McpStdioServerDefinition> = {
-		provideMcpServerDefinitions: async () => [server],
-		resolveMcpServerDefinition: async (definition) => bindToWindow(definition),
-	};
-
 	context.subscriptions.push(
-		vscode.lm.registerMcpServerDefinitionProvider(MCP_PROVIDER_ID, provider),
+		registerMcpProvider(serverPath, vscode.Uri.file(context.extensionPath), version),
 		vscode.commands.registerCommand("mcp-1c-platform-tools.configureCursor", () =>
 			configureAgent(CURSOR, serverPath, false)
 		),
@@ -94,37 +81,72 @@ async function checkPlatformTools(): Promise<void> {
 }
 
 /**
- * Передаёт запускаемому MCP-серверу окно, из которого он запущен.
+ * Публикует определение с окном для VS Code и Copilot Agent Host.
  *
- * @param definition — определение сервера от провайдера
- * @returns определение с окном в MCP_1C_WINDOW
- * @throws если окно недоступно: текст ошибки редактор показывает вместо
- *   молча остановленного сервера
+ * @param serverPath — путь к запускаемому файлу сервера
+ * @param cwd — рабочий каталог процесса сервера
+ * @param version — версия расширения
+ * @returns регистрация провайдера и подписки для её обновления
  */
-async function bindToWindow(
-	definition: vscode.McpStdioServerDefinition
-): Promise<vscode.McpStdioServerDefinition> {
-	const api = await platformToolsApi();
-	if (!api) {
-		throw new Error(PLATFORM_TOOLS_OUTDATED);
-	}
-	const windowId = await api.getMcpWindow();
-	if (!windowId) {
-		const message = vscode.workspace.isTrusted
-			? "Окно не подключено к MCP-серверу, причина в журнале 1C: Platform Tools. Перезапустите MCP-сервер."
-			: "Папка не доверенная: агент с ней не работает. Подтвердите доверие папке и перезапустите MCP-сервер.";
-		logger.warn(message);
-		throw new Error(message);
-	}
-	const resolved = new vscode.McpStdioServerDefinition(
-		definition.label,
-		definition.command,
-		definition.args,
-		{ ...definition.env, MCP_1C_WINDOW: windowId },
-		definition.version
+function registerMcpProvider(serverPath: string, cwd: vscode.Uri, version: string): vscode.Disposable {
+	const definitionsChanged = new vscode.EventEmitter<void>();
+	let retry: ReturnType<typeof setTimeout> | undefined;
+	let disposed = false;
+	const provider: vscode.McpServerDefinitionProvider<vscode.McpStdioServerDefinition> = {
+		onDidChangeMcpServerDefinitions: definitionsChanged.event,
+		// Agent Host берёт это определение без вызова resolveMcpServerDefinition.
+		async provideMcpServerDefinitions() {
+			if (!vscode.workspace.isTrusted) {
+				return [];
+			}
+			const api = await platformToolsApi();
+			if (!api || disposed) {
+				return [];
+			}
+
+			let windowId: string | undefined;
+			let problem = "Окно не подключено к MCP-серверу. Причина в журнале 1C: Platform Tools.";
+			try {
+				windowId = await api.getMcpWindow();
+			} catch (err) {
+				problem = `Не удалось получить окно для MCP-сервера: ${err instanceof Error ? err.message : String(err)}`;
+			}
+			if (disposed) {
+				return [];
+			}
+
+			clearTimeout(retry);
+			if (!windowId) {
+				if (!retry) {
+					logger.warn(`${problem} Повторим подключение автоматически.`);
+				}
+				retry = setTimeout(() => definitionsChanged.fire(), MCP_WINDOW_RETRY_MS);
+				retry.unref();
+				return [];
+			}
+			retry = undefined;
+
+			const server = new vscode.McpStdioServerDefinition(
+				MCP_PROVIDER_ID,
+				"node",
+				[serverPath],
+				{ MCP_1C_SERVER_VERSION: version, MCP_1C_WINDOW: windowId },
+				version
+			);
+			server.cwd = cwd;
+			return [server];
+		},
+	};
+
+	return vscode.Disposable.from(
+		new vscode.Disposable(() => {
+			disposed = true;
+			clearTimeout(retry);
+		}),
+		vscode.lm.registerMcpServerDefinitionProvider(MCP_PROVIDER_ID, provider),
+		vscode.workspace.onDidGrantWorkspaceTrust(() => definitionsChanged.fire()),
+		definitionsChanged
 	);
-	resolved.cwd = definition.cwd;
-	return resolved;
 }
 
 /**
