@@ -1,6 +1,6 @@
 /**
- * Сквозной тест: собранный сервер запускается так, как его запускает клиент
- * из конфига (Cursor, Claude Code), находит окно в реестре и выполняет
+ * Сквозной тест: собранный сервер запускается из конфига клиента или
+ * с идентификатором окна от VS Code, находит окно в реестре и выполняет
  * команду в нём. Реестр лежит во временном домашнем каталоге.
  */
 import { after, before, describe, it } from "node:test";
@@ -21,14 +21,21 @@ const SERVER = fileURLToPath(new URL("../src/index.js", import.meta.url));
  *
  * @param home — домашний каталог с реестром окон
  * @param folder — каталог, из которого запускается сервер
+ * @param windowId — окно из определения сервера в VS Code
  * @returns подключённый клиент MCP
  */
-async function startServer(home: string, folder: string): Promise<Client> {
+async function startServer(home: string, folder: string, windowId?: string): Promise<Client> {
 	const transport = new StdioClientTransport({
 		command: process.execPath,
 		args: [SERVER],
 		cwd: folder,
-		env: { HOME: home, USERPROFILE: home, MCP_1C_LOG_LEVEL: "error", MCP_1C_WINDOW_WAIT_MS: "0" },
+		env: {
+			HOME: home,
+			USERPROFILE: home,
+			MCP_1C_LOG_LEVEL: "error",
+			MCP_1C_WINDOW_WAIT_MS: "0",
+			...(windowId ? { MCP_1C_WINDOW: windowId } : {}),
+		},
 		stderr: "ignore",
 	});
 	const client = new Client({ name: "test", version: "1" });
@@ -36,7 +43,7 @@ async function startServer(home: string, folder: string): Promise<Client> {
 	return client;
 }
 
-describe("сервер из конфига клиента", () => {
+describe("запуск MCP-сервера по stdio", () => {
 	let home: string;
 	let project: string;
 	let channel: FakeChannel;
@@ -85,6 +92,22 @@ describe("сервер из конфига клиента", () => {
 			const call = channel.requests.find((request) => request.method === "executeCommand");
 			assert.strictEqual(call?.token, "token-erp");
 			assert.strictEqual(call?.params?.commandId, "1c-platform-tools.env.status");
+		} finally {
+			await client.close();
+		}
+	});
+
+	it("при запуске из VS Code выполняет команду в указанном окне, даже если cwd относится к другому", async () => {
+		const registry = windowRegistryDir(home);
+		registerWindow(registry, { id: "erp", pipe: channel.pipe, folders: [project] });
+		registerWindow(registry, { id: "vscode", pipe: channel.pipe, folders: [path.join(home, "vscode")] });
+		const client = await startServer(home, project, "vscode");
+		try {
+			const answer = await client.callTool({ name: "env_status", arguments: {} });
+			assert.notStrictEqual(answer.isError, true);
+			const call = channel.requests.at(-1);
+			assert.strictEqual(call?.method, "executeCommand");
+			assert.strictEqual(call?.token, "token-vscode");
 		} finally {
 			await client.close();
 		}
